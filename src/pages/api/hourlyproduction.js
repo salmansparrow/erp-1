@@ -6,19 +6,34 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
-      const { date } = req.query;
-      // console.log("Received Query Parameters:", req.query);
-      if (!date) {
-        return res.status(400).json({ message: "Date is required" });
+      const { dates } = req.query;
+
+      try {
+        // If dates are provided, fetch data for those dates
+        let query = {};
+        if (dates) {
+          const parsedDates = JSON.parse(dates);
+          if (!Array.isArray(parsedDates)) {
+            return res
+              .status(400)
+              .json({ message: "Dates should be an array." });
+          }
+          query.date = { $in: parsedDates };
+        }
+
+        const productions = await HourlyProduction.find(query);
+
+        if (!productions || productions.length === 0) {
+          return res.status(404).json({ message: "No data found." });
+        }
+
+        return res.status(200).json(productions);
+      } catch (error) {
+        console.error("Error fetching production data:", error);
+        return res
+          .status(500)
+          .json({ message: "Failed to fetch production data.", error });
       }
-
-      const production = await HourlyProduction.findOne({ date });
-
-      if (!production) {
-        return res.status(404).json({ message: "No data found for the date" });
-      }
-
-      return res.status(200).json(production);
     }
 
     if (req.method === "POST") {
@@ -30,19 +45,18 @@ export default async function handler(req, res) {
         });
       }
 
-      // Filter out empty hourlyData on the backend
       const filteredLines = lines.map((line) => ({
         ...line,
-        hourlyData: line.hourlyData.filter((hour) => hour.pieces), // Keep only entries with pieces
+        hourlyData: [], // Ensure hourlyData is empty
       }));
 
       try {
         let production = await HourlyProduction.findOne({ date });
 
         if (!production) {
-          production = new HourlyProduction({ date, lines: filteredLines }); // Use filtered lines
+          production = new HourlyProduction({ date, lines: filteredLines });
         } else {
-          production.lines.push(...filteredLines); // Append filtered lines
+          production.lines.push(...filteredLines);
           production.updatedAt = new Date();
         }
 
