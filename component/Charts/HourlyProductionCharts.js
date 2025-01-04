@@ -1,75 +1,52 @@
-import React, { useState, useEffect } from "react";
-import { Box, Typography, List, ListItem, ListItemButton } from "@mui/material";
-import LineWiseEfficiency from "./LineWiseEfficiency";
+import React from "react";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
-const HourlyProductionCharts = () => {
-  const [productions, setProductions] = useState([]);
-  const [dates, setDates] = useState([]);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
-  useEffect(() => {
-    const fetchProductionData = async () => {
-      try {
-        const response = await fetch(`/api/hourlyproduction`);
-        if (response.ok) {
-          const data = await response.json();
-          setProductions(data);
-          setDates(data.map((prod) => prod.date)); // Extract all dates
-        } else {
-          console.error("Failed to fetch production data");
-        }
-      } catch (error) {
-        console.error("Error fetching production data:", error);
-      }
-    };
+const HourlyProductionCharts = ({ production }) => {
+  const hours = production.lines[0]?.hourlyData.map((data) => data.hour);
 
-    fetchProductionData();
-  }, []);
+  const datasets = production.lines.map((line, index) => ({
+    label: `Line ${line.lineNumber}`,
+    data: line.hourlyData.map((data) => data.pieces),
+    backgroundColor: `hsl(${(index + 1) * 60}, 70%, 50%)`,
+  }));
 
-  const scrollToChart = (date) => {
-    const element = document.getElementById(`chart-${date}`);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
+  const chartData = {
+    labels: hours,
+    datasets: datasets,
   };
 
-  return (
-    <Box sx={{ display: "flex" }}>
-      {/* Sidebar for Links */}
-      <Box sx={{ width: "10%", padding: 2, borderRight: "1px solid #ccc" }}>
-        <Typography variant="h6" gutterBottom>
-          Available Dates
-        </Typography>
-        <List>
-          {dates.map((date) => (
-            <ListItem key={date} disablePadding>
-              <ListItemButton onClick={() => scrollToChart(date)}>
-                {date}
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </Box>
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: `Hourly Production for ${production.date}`,
+      },
+    },
+  };
 
-      {/* Main Content for Charts */}
-      <Box sx={{ width: "80%", padding: 2 }}>
-        <Typography variant="h4" gutterBottom>
-          Hourly Production Charts
-        </Typography>
-        {productions.map((production) => (
-          <Box
-            key={production.date}
-            id={`chart-${production.date}`}
-            sx={{ marginBottom: 5 }}
-          >
-            <Typography variant="h5" gutterBottom>
-              {`Date: ${production.date}`}
-            </Typography>
-            <LineWiseEfficiency production={production} />
-          </Box>
-        ))}
-      </Box>
-    </Box>
-  );
+  return <Bar data={chartData} options={options} />;
 };
 
 export default HourlyProductionCharts;
