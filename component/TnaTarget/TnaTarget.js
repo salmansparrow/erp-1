@@ -30,9 +30,27 @@ function TnaChart() {
           <YAxis />
           <Tooltip />
           <Legend />
-          <Line type="monotone" dataKey="target" stroke="#8884d8" />
-          <Line type="monotone" dataKey="feeding" stroke="#82ca9d" />
-          <Line type="monotone" dataKey="achieved" stroke="#ffc658" />
+          <Line
+            type="monotone"
+            strokeWidth={5} // Iski thickness alag set
+            dataKey="target"
+            stroke="#8884d8"
+          />
+          <Line
+            type="monotone"
+            strokeWidth={5} // Iski thickness alag set
+            strokeDasharray={"6 4"}
+            strokeOpacity={10}
+            dataKey="feeding"
+            stroke="#82ca9d"
+          />
+          <Line
+            type="monotone"
+            strokeWidth={5} // Iski thickness alag set
+            strokeDasharray={"6 4"}
+            dataKey="achieved"
+            stroke="#ffc658"
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>
