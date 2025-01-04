@@ -18,7 +18,7 @@ import Link from "next/link"; // Import Link
 
 const drawerWidth = 240;
 const navItems = [
-  { label: "Hourly Production DashBoard", path: "/dashboard" },
+  { label: "Hourly Production DashBoard", path: "/hourlydashboard" },
   { label: "View Hourly Production Data", path: "/viewhourlyproduction" },
   { label: "Contact", path: "/contact" },
 ];
