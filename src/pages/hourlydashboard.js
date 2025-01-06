@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import HourlyProductionCharts from "../../component/Charts/HourlyProductionCharts";
+import LayoutOfHourlyProduction from "../../component/Layout/Layout";
 
 const ChartPage = () => {
   const [availableDates, setAvailableDates] = useState([]);
@@ -54,44 +55,50 @@ const ChartPage = () => {
   }, [selectedDate]);
 
   return (
-    <div style={{ display: "flex" }}>
-      {/* Sidebar for Dates */}
-      <div
-        style={{ width: "20%", padding: "10px", borderRight: "1px solid #ccc" }}
-      >
-        <h3>Available Dates</h3>
-        <ul style={{ listStyleType: "none", padding: 0 }}>
-          {availableDates.map((date) => (
-            <li key={date} style={{ marginBottom: "10px" }}>
-              <button
-                onClick={() => setSelectedDate(date)}
-                style={{
-                  padding: "10px",
-                  cursor: "pointer",
-                  backgroundColor: selectedDate === date ? "#ccc" : "#fff",
-                  border: "1px solid #000",
-                }}
-              >
-                {date}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+    <LayoutOfHourlyProduction>
+      <div style={{ display: "flex", marginTop: "50px" }}>
+        {/* Sidebar for Dates */}
+        <div
+          style={{
+            width: "20%",
+            padding: "10px",
+            borderRight: "1px solid #ccc",
+          }}
+        >
+          <h3>Available Dates</h3>
+          <ul style={{ listStyleType: "none", padding: 0 }}>
+            {availableDates.map((date) => (
+              <li key={date} style={{ marginBottom: "10px" }}>
+                <button
+                  onClick={() => setSelectedDate(date)}
+                  style={{
+                    padding: "10px",
+                    cursor: "pointer",
+                    backgroundColor: selectedDate === date ? "#ccc" : "#fff",
+                    border: "1px solid #000",
+                  }}
+                >
+                  {date}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-      {/* Main Chart Area */}
-      <div style={{ width: "80%", padding: "10px" }}>
-        {selectedDate ? (
-          chartData ? (
-            <HourlyProductionCharts production={chartData} />
+        {/* Main Chart Area */}
+        <div style={{ width: "80%", padding: "10px" }}>
+          {selectedDate ? (
+            chartData ? (
+              <HourlyProductionCharts production={chartData} />
+            ) : (
+              <div>Loading chart for {selectedDate}...</div>
+            )
           ) : (
-            <div>Loading chart for {selectedDate}...</div>
-          )
-        ) : (
-          <div>Please select a date to view the chart.</div>
-        )}
+            <div>Please select a date to view the chart.</div>
+          )}
+        </div>
       </div>
-    </div>
+    </LayoutOfHourlyProduction>
   );
 };
 
