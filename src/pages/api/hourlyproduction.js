@@ -71,13 +71,11 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "PUT") {
-      const { date, lineNumber, updatedHourlyData } = req.body;
+      const { date, lines } = req.body;
 
-      if (!date || !lineNumber || !Array.isArray(updatedHourlyData)) {
+      if (!date || !Array.isArray(lines)) {
         return res.status(400).json({ message: "Invalid input data" });
       }
-      console.log("Line Found:", line);
-      console.log("Updated Hourly Data:", updatedHourlyData);
 
       try {
         const production = await HourlyProduction.findOne({ date });
@@ -88,30 +86,61 @@ export default async function handler(req, res) {
             .json({ message: "Data not found for the specified date" });
         }
 
-        const line = production.lines.find(
-          (line) => line.lineNumber === lineNumber
-        );
+        lines.forEach((updatedLine) => {
+          const existingLine = production.lines.find(
+            (line) => line.lineNumber === updatedLine.lineNumber
+          );
 
-        if (!line) {
-          return res.status(404).json({ message: "Line not found" });
-        }
+          if (existingLine) {
+            // Update line details
+            Object.assign(existingLine, updatedLine);
 
-        // Purani hourly data ko replace karte hain updatedHourlyData se
-        line.hourlyData = updatedHourlyData;
-        console.log("Saving Production Data Before:", production);
+            // Update hourly data with em and am calculations
+            if (
+              updatedLine.hourlyData &&
+              Array.isArray(updatedLine.hourlyData) &&
+              updatedLine.hourlyData.length === 8
+            ) {
+              existingLine.hourlyData = updatedLine.hourlyData.map(
+                (hour, index) => {
+                  const { pieces, efficiency } = hour || {};
+                  const SAM = parseFloat(existingLine.SAM) || 0;
+                  const operator = parseInt(existingLine.operator) || 0;
+                  const helper = parseInt(existingLine.helper) || 0;
+
+                  const em = SAM * (pieces || 0);
+                  const am = (operator + helper) * 60;
+
+                  return {
+                    hour: `Hour ${index + 1}`,
+                    pieces: pieces || 0,
+                    efficiency: efficiency || 0,
+                    em: em.toFixed(2),
+                    am: am.toFixed(2),
+                  };
+                }
+              );
+            } else {
+              console.warn(
+                `Invalid hourlyData for line ${updatedLine.lineNumber}`
+              );
+            }
+          } else {
+            console.warn(`Line not found: ${updatedLine.lineNumber}`);
+          }
+        });
 
         await production.save();
-        console.log("Saving Production Data After:", production);
 
         return res.status(200).json({
-          message: "Hourly data updated successfully!",
+          message: "Production data updated successfully!",
           production,
         });
       } catch (error) {
-        console.error("Error updating hourly data:", error);
+        console.error("Error updating production data:", error);
         return res
           .status(500)
-          .json({ message: "Failed to update hourly data", error });
+          .json({ message: "Failed to update production data", error });
       }
     }
 
