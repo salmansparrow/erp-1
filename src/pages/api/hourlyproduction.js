@@ -76,6 +76,8 @@ export default async function handler(req, res) {
       if (!date || !lineNumber || !Array.isArray(updatedHourlyData)) {
         return res.status(400).json({ message: "Invalid input data" });
       }
+      console.log("Line Found:", line);
+      console.log("Updated Hourly Data:", updatedHourlyData);
 
       try {
         const production = await HourlyProduction.findOne({ date });
@@ -96,8 +98,10 @@ export default async function handler(req, res) {
 
         // Purani hourly data ko replace karte hain updatedHourlyData se
         line.hourlyData = updatedHourlyData;
+        console.log("Saving Production Data Before:", production);
 
         await production.save();
+        console.log("Saving Production Data After:", production);
 
         return res.status(200).json({
           message: "Hourly data updated successfully!",

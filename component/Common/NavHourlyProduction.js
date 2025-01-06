@@ -18,9 +18,10 @@ import Link from "next/link"; // Import Link
 
 const drawerWidth = 240;
 const navItems = [
+  { label: "Add Hourly Production", path: "/hourlyproduction" },
   { label: "Hourly Production DashBoard", path: "/hourlydashboard" },
   { label: "View Hourly Production Data", path: "/viewhourlyproduction" },
-  { label: "Contact", path: "/contact" },
+  { label: "Update Production Data", path: "/updatehourlyproduction" },
 ];
 
 function NavHourlyProduction(props) {
