@@ -24,19 +24,23 @@ ChartJS.register(
 );
 
 const HourlyProductionCharts = ({ production }) => {
-  const hours = production.lines[0]?.hourlyData.map((_, index) => {
-    const startHour = 9 + index + (index >= 4 ? 1 : 0); // Skip 1:00 pm to 2:00 pm
-    const isPM = startHour >= 12;
-    const hour12Format = startHour > 12 ? startHour - 12 : startHour;
-    const suffix = isPM ? "pm" : "am";
-    return `${hour12Format}:00 ${suffix}`;
-  });
+  const hours =
+    production.lines[0]?.hourlyData.map((_, index) => {
+      const startHour = 9 + index + (index >= 4 ? 1 : 0); // Skip break 1:00 pm to 2:00 pm
+      const isPM = startHour >= 12;
+      const hour12Format = startHour > 12 ? startHour - 12 : startHour;
+      const suffix = isPM ? "pm" : "am";
+      return `${hour12Format}:00 ${suffix}`;
+    }) || []; // Default to an empty array if no data
 
-  const datasets = production.lines.map((line, index) => ({
-    label: `Line ${line.lineNumber}`,
-    data: line.hourlyData.map((data) => data.efficiency), // Use efficiency for bar height
-    backgroundColor: `hsl(${(index + 1) * 60}, 70%, 50%)`,
-  }));
+  const datasets =
+    production.lines.map((line, index) => ({
+      label: `Line ${line.lineNumber || `Unknown`}`,
+      data: line.hourlyData.map(
+        (data) => (data?.pieces > 0 ? data.efficiency : 0) // Show efficiency as 0 if pieces are 0
+      ),
+      backgroundColor: `hsl(${(index + 1) * 60}, 70%, 50%)`,
+    })) || []; // Default to an empty array if no data
 
   const chartData = {
     labels: hours,
@@ -51,7 +55,7 @@ const HourlyProductionCharts = ({ production }) => {
       },
       title: {
         display: true,
-        text: `Hourly Production Efficiency for ${production.date}`,
+        text: `Hourly Production Efficiency for ${production.date || "N/A"}`,
       },
       annotation: {
         annotations: {
