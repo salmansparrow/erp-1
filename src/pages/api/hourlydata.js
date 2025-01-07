@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   await dbConnect();
 
   if (req.method === "POST") {
-    const { hourlyData } = req.body; // Expecting array of data for all lines for a specific hour
+    const { hourlyData, entryDate } = req.body; // Include entryDate for backdated data
 
     if (!hourlyData || !Array.isArray(hourlyData)) {
       return res
@@ -14,12 +14,12 @@ export default async function handler(req, res) {
     }
 
     try {
-      const date = new Date().toISOString().split("T")[0]; // Today's date
+      const date = entryDate || new Date().toISOString().split("T")[0]; // Use entryDate if provided, otherwise default to today's date
       const production = await HourlyProduction.findOne({ date });
 
       if (!production) {
         return res.status(404).json({
-          message: "Production record not found for today's date.",
+          message: `Production record not found for the date: ${date}`,
         });
       }
 
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
 
       return res
         .status(200)
-        .json({ message: "Hourly data saved successfully!" });
+        .json({ message: `Hourly data saved successfully for ${date}!` });
     } catch (error) {
       console.error("Error saving hourly data:", error);
       return res

@@ -15,6 +15,8 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Link from "next/link"; // Import Link
+import logo from "../../public/images/logo/logo.png";
+import Image from "next/image";
 
 const drawerWidth = 240;
 const navItems = [
@@ -22,6 +24,7 @@ const navItems = [
   { label: "Hourly Production DashBoard", path: "/hourlydashboard" },
   { label: "View Hourly Production Data", path: "/viewhourlyproduction" },
   { label: "Update Production Data", path: "/updatehourlyproduction" },
+  { label: "Add BackDate Data", path: "/addbackdatedhourlyproduction" },
 ];
 
 function NavHourlyProduction(props) {
@@ -35,14 +38,16 @@ function NavHourlyProduction(props) {
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
       <Typography variant="h6" sx={{ my: 2 }}>
-        MUI
+        <Link href="/hourlydashboard">
+          <Image src={logo} height={80} width={100} />
+        </Link>
       </Typography>
       <Divider />
       <List>
         {navItems.map((item) => (
-          <ListItem key={item.label} disablePadding>
+          <ListItem key={item.label}>
             <Link href={item.path} passHref>
-              <ListItemButton sx={{ textAlign: "center" }}>
+              <ListItemButton sx={{ textAlign: "center", color: "black" }}>
                 <ListItemText primary={item.label} />
               </ListItemButton>
             </Link>
@@ -58,7 +63,12 @@ function NavHourlyProduction(props) {
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <AppBar component="nav">
+      <AppBar
+        component="nav"
+        sx={{
+          backgroundColor: "steelblue",
+        }}
+      >
         <Toolbar>
           <IconButton
             color="inherit"
@@ -74,12 +84,14 @@ function NavHourlyProduction(props) {
             component="div"
             sx={{ flexGrow: 1, display: { xs: "none", sm: "block" } }}
           >
-            MUI
+            <Link href="/hourlydashboard">
+              <Image src={logo} height={60} width={80} />
+            </Link>
           </Typography>
           <Box sx={{ display: { xs: "none", sm: "block" } }}>
             {navItems.map((item) => (
               <Link href={item.path} passHref key={item.label}>
-                <Button sx={{ color: "#fff" }}>{item.label}</Button>
+                <Button sx={{ color: "black" }}>{item.label}</Button>
               </Link>
             ))}
           </Box>

@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from "react";
 import HourlyProductionCharts from "../../component/Charts/HourlyProductionCharts";
 import LayoutOfHourlyProduction from "../../component/Layout/Layout";
+import { Box, Typography, Grid, Paper } from "@mui/material";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 
 const ChartPage = () => {
   const [availableDates, setAvailableDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [chartData, setChartData] = useState(null);
+  const [windowWidth, setWindowWidth] = useState(null);
 
-  // Fetch available dates from API
+  // API se available dates fetch karna
   const fetchAvailableDates = async () => {
     try {
       const response = await fetch("/api/hourlyproduction");
@@ -17,7 +21,9 @@ const ChartPage = () => {
         return;
       }
       const data = await response.json();
-      const dates = data.map((production) => production.date);
+      const dates = data.map((production) =>
+        new Date(production.date).toLocaleDateString("en-CA")
+      ); // Fix timezone issue
       setAvailableDates(dates);
     } catch (error) {
       console.error("Error fetching available dates:", error);
@@ -25,7 +31,7 @@ const ChartPage = () => {
     }
   };
 
-  // Fetch chart data for the selected date
+  // Selected date ka chart data fetch karna
   const fetchChartData = async (date) => {
     try {
       const response = await fetch(
@@ -37,7 +43,7 @@ const ChartPage = () => {
         return;
       }
       const data = await response.json();
-      setChartData(data[0]); // Get the first chart data
+      setChartData(data[0]);
     } catch (error) {
       console.error("Error fetching chart data:", error);
       alert("Failed to fetch chart data.");
@@ -46,6 +52,19 @@ const ChartPage = () => {
 
   useEffect(() => {
     fetchAvailableDates();
+
+    // Add event listener for window resize
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    if (typeof window !== "undefined") {
+      setWindowWidth(window.innerWidth); // Initialize width on the client-side
+      window.addEventListener("resize", handleResize);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("resize", handleResize);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -54,50 +73,75 @@ const ChartPage = () => {
     }
   }, [selectedDate]);
 
+  // Calendar me available dates highlight karna
+  const isDateAvailable = (date) => {
+    const formattedDate =
+      date instanceof Date ? date.toLocaleDateString("en-CA") : null;
+    return formattedDate && availableDates.includes(formattedDate);
+  };
+
+  const handleDateChange = (value) => {
+    if (value instanceof Date) {
+      setSelectedDate(value.toLocaleDateString("en-CA"));
+    }
+  };
+
   return (
     <LayoutOfHourlyProduction>
-      <div style={{ display: "flex", marginTop: "50px" }}>
-        {/* Sidebar for Dates */}
-        <div
-          style={{
-            width: "20%",
-            padding: "10px",
-            borderRight: "1px solid #ccc",
-          }}
-        >
-          <h3>Available Dates</h3>
-          <ul style={{ listStyleType: "none", padding: 0 }}>
-            {availableDates.map((date) => (
-              <li key={date} style={{ marginBottom: "10px" }}>
-                <button
-                  onClick={() => setSelectedDate(date)}
-                  style={{
-                    padding: "10px",
-                    cursor: "pointer",
-                    backgroundColor: selectedDate === date ? "#ccc" : "#fff",
-                    border: "1px solid #000",
-                  }}
-                >
-                  {date}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <Box
+        sx={{
+          mt: { lg: 10, xs: 2 },
+          px: 2,
+        }}
+      >
+        <Grid container spacing={3}>
+          {/* Calendar Section */}
+          <Grid item xs={12} md={4}>
+            <Paper elevation={3} sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Select a Date
+              </Typography>
+              <Calendar
+                onChange={handleDateChange}
+                tileClassName={({ date }) =>
+                  isDateAvailable(date) ? "available-date" : null
+                }
+                tileDisabled={({ date }) => !isDateAvailable(date)}
+              />
+            </Paper>
+          </Grid>
 
-        {/* Main Chart Area */}
-        <div style={{ width: "80%", padding: "10px" }}>
-          {selectedDate ? (
-            chartData ? (
-              <HourlyProductionCharts production={chartData} />
-            ) : (
-              <div>Loading chart for {selectedDate}...</div>
-            )
-          ) : (
-            <div>Please select a date to view the chart.</div>
-          )}
-        </div>
-      </div>
+          {/* Chart Section */}
+          <Grid item xs={12} md={8}>
+            <Paper elevation={3} sx={{ p: 2 }}>
+              {selectedDate ? (
+                chartData ? (
+                  <HourlyProductionCharts
+                    production={chartData}
+                    key={windowWidth} // Re-render chart on resize
+                  />
+                ) : (
+                  <Typography variant="body1">
+                    Loading chart for {selectedDate}...
+                  </Typography>
+                )
+              ) : (
+                <Typography variant="body1">
+                  Please select a date to view the chart.
+                </Typography>
+              )}
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
+
+      {/* Styles for Calendar */}
+      <style jsx>{`
+        .available-date {
+          background-color: #4caf50;
+          color: white;
+        }
+      `}</style>
     </LayoutOfHourlyProduction>
   );
 };
