@@ -58,22 +58,27 @@ const HourlyProductionDisplay = () => {
             <TableBody>
               {production.lines.map((line, lineIndex) => (
                 <TableRow key={lineIndex}>
-                  <TableCell>{line.lineNumber}</TableCell>
-                  <TableCell>{line.articleName}</TableCell>
-                  <TableCell>{line.SAM}</TableCell>
-                  <TableCell>{line.operator}</TableCell>
-                  <TableCell>{line.helper}</TableCell>
-                  <TableCell>{line.shiftTime}</TableCell>
-                  <TableCell>{line.target100}</TableCell>
-                  <TableCell>{line.target75}</TableCell>
-                  <TableCell>{line.targetPerHour}</TableCell>
+                  <TableCell>{line.lineNumber || "N/A"}</TableCell>
+                  <TableCell>{line.articleName || "N/A"}</TableCell>
+                  <TableCell>{line.SAM || 0}</TableCell>
+                  <TableCell>{line.operator || 0}</TableCell>
+                  <TableCell>{line.helper || 0}</TableCell>
+                  <TableCell>{line.shiftTime || 0}</TableCell>
+                  <TableCell>{line.target100 || 0}</TableCell>
+                  <TableCell>{line.target75 || 0}</TableCell>
+                  <TableCell>{line.targetPerHour || 0}</TableCell>
                   <TableCell>
-                    {line.hourlyData.map((hour, hourIndex) => (
-                      <div key={hourIndex}>
-                        <strong>{hour.hour}:</strong> {hour.pieces} pcs,{" "}
-                        {hour.efficiency}% efficiency
-                      </div>
-                    ))}
+                    {line.hourlyData && line.hourlyData.length > 0 ? (
+                      line.hourlyData.map((hour, hourIndex) => (
+                        <div key={hourIndex}>
+                          <strong>{hour?.hour || "N/A"}:</strong>{" "}
+                          {hour?.pieces || 0} pcs, {hour?.efficiency || 0}%
+                          efficiency
+                        </div>
+                      ))
+                    ) : (
+                      <div>No hourly data</div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
