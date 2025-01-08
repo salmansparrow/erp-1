@@ -6,7 +6,6 @@ export default async function handler(req, res) {
 
   if (req.method === "POST") {
     const { hourlyData, entryDate } = req.body; // Include entryDate for backdated data
-      console.log(req.body)
     if (!hourlyData || !Array.isArray(hourlyData)) {
       return res
         .status(400)
