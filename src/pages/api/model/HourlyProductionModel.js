@@ -9,16 +9,21 @@ const HourlyDataSchema = new mongoose.Schema({
 });
 
 const LineDataSchema = new mongoose.Schema({
-  lineNumber: String,
-  articleName: String,
-  SAM: Number,
-  operator: Number,
-  helper: Number,
-  shiftTime: Number,
-  target100: Number,
-  target75: Number,
-  targetPerHour: Number,
-  hourlyData: [HourlyDataSchema], // Array of hourly breakdown
+  lineNumber: { type: String, required: true },
+  articleName: { type: String, required: true },
+  SAM: { type: Number, required: true },
+  operator: { type: Number, required: true },
+  helper: { type: Number, required: true },
+  shiftTime: { type: Number, default: 480 },
+  target100: { type: Number, default: 0 },
+  target75: { type: Number, default: 0 },
+  targetPerHour: { type: Number, default: 0 },
+  otData: {
+    otHours: { type: Number, default: 0 },
+    otMenPower: { type: Number, default: 0 },
+    otMinutes: { type: Number, default: 0 },
+  },
+  hourlyData: [HourlyDataSchema],
 });
 
 const HourlyProductionSchema = new mongoose.Schema({
@@ -26,6 +31,11 @@ const HourlyProductionSchema = new mongoose.Schema({
   lines: [LineDataSchema], // Array of lines
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+});
+
+HourlyProductionSchema.pre("save", function (next) {
+  this.updatedAt = Date.now();
+  next();
 });
 
 module.exports =

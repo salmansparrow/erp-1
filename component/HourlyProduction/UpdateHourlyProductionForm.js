@@ -129,32 +129,25 @@ const UpdateHourlyProductionWithCalendar = () => {
     try {
       const payload = {
         date: productionData.date,
-        lines: productionData.lines.map((line) => {
-          const SAM = parseFloat(line.SAM) || 0;
-          const operator = parseInt(line.operator) || 0;
-          const helper = parseInt(line.helper) || 0;
+        lines: productionData.lines.map((line) => ({
+          lineNumber: line.lineNumber,
+          hourlyData: line.hourlyData.map((hour, idx) => {
+            if (idx === hourIndex) {
+              const pieces = parseFloat(hour.pieces) || 0;
+              const em = line.SAM * pieces || 0;
+              const am = (line.operator + line.helper) * 60 || 0;
+              const efficiency = am > 0 ? Math.round((em / am) * 100) : 0;
 
-          return {
-            lineNumber: line.lineNumber,
-            hourlyData: line.hourlyData.map((hour, idx) => {
-              if (idx === hourIndex) {
-                const pieces = parseFloat(hour.pieces) || 0;
-                const em = SAM * pieces;
-                const am = (operator + helper) * 60;
-                // const efficiency = am > 0 ? ((em / am) * 100).toFixed(2) : 0;
-                const efficiency = am > 0 ? Math.round((em / am) * 100) : 0; // Round efficiency
-
-                return {
-                  ...hour,
-                  em: em.toFixed(2),
-                  am: am.toFixed(2),
-                  efficiency,
-                };
-              }
-              return hour;
-            }),
-          };
-        }),
+              return {
+                ...hour,
+                pieces,
+                efficiency,
+                isSaved: true, // Save status
+              };
+            }
+            return hour;
+          }),
+        })),
       };
 
       const response = await fetch("/api/hourlyproduction", {
@@ -165,6 +158,19 @@ const UpdateHourlyProductionWithCalendar = () => {
 
       if (response.ok) {
         alert(`Hour ${hourIndex + 1} data saved successfully!`);
+        setProductionData((prevData) => {
+          const updatedData = { ...prevData };
+          updatedData.lines = updatedData.lines.map((line) => ({
+            ...line,
+            hourlyData: line.hourlyData.map((hour, idx) => {
+              if (idx === hourIndex) {
+                return { ...hour, isSaved: true }; // Mark as saved
+              }
+              return hour;
+            }),
+          }));
+          return updatedData;
+        });
       } else {
         const error = await response.json();
         alert(`Failed to update hourly data: ${error.message}`);
@@ -310,6 +316,9 @@ const UpdateHourlyProductionWithCalendar = () => {
                               handleHourlyChange(idx, hourIndex, e.target.value)
                             }
                             placeholder="Pieces"
+                            disabled={
+                              line.hourlyData[hourIndex]?.isSaved || false
+                            } // Disable if saved
                           />
                         </TableCell>
                         <TableCell key={`efficiency-${hourIndex}-${idx}`}>
@@ -323,9 +332,23 @@ const UpdateHourlyProductionWithCalendar = () => {
                     <TableCell>
                       <Button
                         variant="contained"
+                        color={
+                          productionData.lines.some(
+                            (line) => line.hourlyData[hourIndex]?.isSaved
+                          )
+                            ? "success" // Change button color if saved
+                            : "primary"
+                        }
                         onClick={() => handleSaveHourlyData(hourIndex)}
+                        disabled={productionData.lines.every(
+                          (line) => line.hourlyData[hourIndex]?.isSaved
+                        )} // Disable if already saved
                       >
-                        Save Hour
+                        {productionData.lines.some(
+                          (line) => line.hourlyData[hourIndex]?.isSaved
+                        )
+                          ? "Saved"
+                          : "Save Hour"}
                       </Button>
                     </TableCell>
                   </TableRow>

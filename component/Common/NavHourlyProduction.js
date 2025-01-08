@@ -47,7 +47,7 @@ function NavHourlyProduction(props) {
         {navItems.map((item) => (
           <ListItem key={item.label}>
             <Link href={item.path} passHref>
-              <ListItemButton sx={{ textAlign: "center", color: "black" }}>
+              <ListItemButton sx={{ textAlign: "center", color: "white" }}>
                 <ListItemText primary={item.label} />
               </ListItemButton>
             </Link>

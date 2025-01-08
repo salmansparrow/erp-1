@@ -92,7 +92,7 @@ const HourlyProductionForm = () => {
 
   const handleHourlyChange = (lineIndex, hourIndex, value) => {
     const updatedLines = [...lines];
-    const pieces = parseFloat(value) || 0;
+    const pieces = value === "" ? "" : parseFloat(value); // Allow 0 as a valid value
     const SAM = parseFloat(updatedLines[lineIndex].SAM) || 0;
     const operator = parseInt(updatedLines[lineIndex].operator) || 0;
     const helper = parseInt(updatedLines[lineIndex].helper) || 0;
@@ -308,6 +308,7 @@ const HourlyProductionForm = () => {
                             placeholder="Pieces"
                             fullWidth
                             size="small"
+                            type="number"
                           />
                         )}
                       </TableCell>
@@ -322,7 +323,7 @@ const HourlyProductionForm = () => {
                       onClick={() => handleSaveHourlyData(hourIndex)}
                       disabled={lines.some(
                         (line) =>
-                          !line.hourlyData[hourIndex]?.pieces ||
+                          line.hourlyData[hourIndex]?.pieces === "" ||
                           line.hourlyData[hourIndex]?.isSaved
                       )}
                     >
