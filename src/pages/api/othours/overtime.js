@@ -25,6 +25,9 @@ export default async function handler(req, res) {
     const parsedOtMenPower = Number(otMenPower);
     const parsedOtMinutes = Number(otMinutes);
     const parsedOtPieces = Number(otPieces);
+
+    console.log( "ammar" ,  parsedOtPieces , parsedOtMenPower);
+    
     console.log("Parsed OT Pieces:", parsedOtPieces);
 
     console.log("Request Payload:", req.body);
@@ -36,7 +39,17 @@ export default async function handler(req, res) {
       otPieces: parsedOtPieces,
     });
 
-    try {
+    try { 
+
+      console.log("Update new :", {
+        otHours: parsedOtHours,
+        otMenPower: parsedOtMenPower,
+        otMinutes: parsedOtMinutes,
+        otPieces: parsedOtPieces,
+      });
+  
+      
+      
       const result = await HourlyProduction.updateOne(
         {
           date, // Match the specific date document
@@ -59,13 +72,13 @@ export default async function handler(req, res) {
       }
 
       console.log("Update Result:", result);
-
-      res.status(200).json({ message: "OT Data Saved Successfully!" });
+ 
+     return res.status(200).json({ message: "OT Data Saved Successfully!" });
     } catch (error) {
       console.error("Error saving OT data:", error);
-      res.status(500).json({ message: "Failed to save OT Data." });
+      return res.status(500).json({ message: "Failed to save OT Data." });
     }
   } else {
-    res.status(405).json({ message: "Method Not Allowed." });
+   return res.status(405).json({ message: "Method Not Allowed." });
   }
 }
