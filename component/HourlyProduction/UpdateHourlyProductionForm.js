@@ -18,6 +18,17 @@ const UpdateHourlyProductionWithCalendar = () => {
   const [productionData, setProductionData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showOTForm, setShowOTForm] = useState(false);
+  const [otData, setOtData] = useState(
+    productionData
+      ? productionData.lines.map(() => ({
+          hours: "",
+          menPower: "",
+          pieces: "",
+          minutes: 0,
+        }))
+      : []
+  );
 
   const fetchProductionData = async (date) => {
     setLoading(true);
@@ -34,6 +45,16 @@ const UpdateHourlyProductionWithCalendar = () => {
       if (!response.ok) throw new Error("Failed to fetch production data.");
       const data = await response.json();
       setProductionData(data[0]);
+
+      // Initialize OT data
+      setOtData(
+        data[0].lines.map(() => ({
+          hours: "",
+          menPower: "",
+          pieces: "",
+          minutes: 0,
+        }))
+      );
     } catch (error) {
       console.error("Error fetching production data:", error);
       setError("Failed to fetch production data.");
@@ -46,6 +67,54 @@ const UpdateHourlyProductionWithCalendar = () => {
     const formattedDate = date.toLocaleDateString("en-CA");
     setSelectedDate(formattedDate);
     fetchProductionData(formattedDate);
+  };
+
+  const toggleOTForm = () => {
+    setShowOTForm(!showOTForm);
+  };
+
+  const handleOTChange = (lineIndex, field, value) => {
+    const updatedOtData = [...otData];
+    updatedOtData[lineIndex][field] = value;
+
+    // Calculate OT Minutes
+    const hours = parseFloat(updatedOtData[lineIndex].hours) || 0;
+    const menPower = parseFloat(updatedOtData[lineIndex].menPower) || 0;
+    updatedOtData[lineIndex].minutes = hours * menPower * 60;
+
+    setOtData(updatedOtData);
+  };
+
+  const handleSaveOTForLine = async (lineIndex) => {
+    try {
+      const ot = otData[lineIndex];
+      const payload = {
+        date: selectedDate,
+        lineNumber: productionData.lines[lineIndex].lineNumber,
+        otHours: ot.hours || 0,
+        otMenPower: ot.menPower || 0,
+        otMinutes: ot.minutes || 0,
+        otPieces: ot.pieces || 0,
+      };
+
+      console.log("Payload being sent to the API:", payload);
+
+      const response = await fetch("/api/othours/overtime", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        alert(`OT Data for Line ${lineIndex + 1} Saved Successfully!`);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to Save OT Data: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error("Error saving OT data:", error);
+      alert("An error occurred while saving OT data.");
+    }
   };
 
   const handleLineDetailsChange = (lineIndex, field, value) => {
@@ -356,6 +425,84 @@ const UpdateHourlyProductionWithCalendar = () => {
               </TableBody>
             </Table>
           </Box>
+
+          {/* Add OT Button */}
+          <Box sx={{ textAlign: "center", marginTop: 4 }}>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={toggleOTForm}
+            >
+              {showOTForm ? "Close OT Form" : "Add OT"}
+            </Button>
+          </Box>
+          {/* OT Form */}
+          {showOTForm && (
+            <Box sx={{ marginTop: 4 }}>
+              <Typography variant="h6">OT Data</Typography>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Line</TableCell>
+                    <TableCell>OT Hours</TableCell>
+                    <TableCell>OT Men Power</TableCell>
+                    <TableCell>OT Pieces</TableCell>
+                    <TableCell>OT Minutes</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {productionData.lines.map((line, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{`Line ${line.lineNumber}`}</TableCell>
+                      <TableCell>
+                        <TextField
+                          value={otData[index]?.hours || ""}
+                          onChange={(e) =>
+                            handleOTChange(index, "hours", e.target.value)
+                          }
+                          type="number"
+                          placeholder="OT Hours"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          value={otData[index]?.menPower || ""}
+                          onChange={(e) =>
+                            handleOTChange(index, "menPower", e.target.value)
+                          }
+                          type="number"
+                          placeholder="OT Men Power"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          value={otData[index]?.pieces || ""}
+                          onChange={(e) =>
+                            handleOTChange(index, "pieces", e.target.value)
+                          }
+                          type="number"
+                          placeholder="OT Pieces"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {otData[index]?.minutes || 0} Minutes
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => handleSaveOTForLine(index)}
+                        >
+                          Save
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Box>
+          )}
         </>
       )}
     </Box>

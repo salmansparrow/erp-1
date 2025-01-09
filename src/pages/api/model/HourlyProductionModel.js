@@ -22,6 +22,7 @@ const LineDataSchema = new mongoose.Schema({
     otHours: { type: Number, default: 0 },
     otMenPower: { type: Number, default: 0 },
     otMinutes: { type: Number, default: 0 },
+    otPieces: { type: Number, default: 0, required: true }, // Ensure this field exists
   },
   hourlyData: [HourlyDataSchema],
 });
