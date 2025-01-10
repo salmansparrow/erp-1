@@ -39,7 +39,7 @@ function NavHourlyProduction(props) {
     <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
       <Typography variant="h6" sx={{ my: 2 }}>
         <Link href="/hourlydashboard">
-          <Image src={logo} height={80} width={100} />
+          <Image src={logo} alt="logo" height={80} width={100} priority />
         </Link>
       </Typography>
       <Divider />
@@ -85,7 +85,7 @@ function NavHourlyProduction(props) {
             sx={{ flexGrow: 1, display: { xs: "none", sm: "block" } }}
           >
             <Link href="/hourlydashboard">
-              <Image src={logo} height={60} width={80} />
+              <Image src={logo} alt="logo" priority height={60} width={80} />
             </Link>
           </Typography>
           <Box sx={{ display: { xs: "none", sm: "block" } }}>

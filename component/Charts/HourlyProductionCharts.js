@@ -24,23 +24,35 @@ ChartJS.register(
 );
 
 const HourlyProductionCharts = ({ production }) => {
-  const hours =
-    production.lines[0]?.hourlyData.map((_, index) => {
-      const startHour = 9 + index + (index >= 4 ? 1 : 0); // Skip break 1:00 pm to 2:00 pm
-      const isPM = startHour >= 12;
-      const hour12Format = startHour > 12 ? startHour - 12 : startHour;
-      const suffix = isPM ? "pm" : "am";
-      return `${hour12Format}:00 ${suffix}`;
-    }) || []; // Default to an empty array if no data
+  // Define hours including the break statically
+  const hours = [
+    "9:00 am",
+    "10:00 am",
+    "11:00 am",
+    "12:00 pm",
+    "1:00 pm (Break)", // Static entry for break
+    "2:00 pm",
+    "3:00 pm",
+    "4:00 pm",
+    "5:00 pm",
+  ];
 
+  // Adjust datasets to include a break time with empty data
   const datasets =
-    production.lines.map((line, index) => ({
-      label: `Line ${line.lineNumber || `Unknown`}`,
-      data: line.hourlyData.map(
+    production.lines.map((line, index) => {
+      const lineData = line.hourlyData.map(
         (data) => (data?.pieces > 0 ? data.efficiency : 0) // Show efficiency as 0 if pieces are 0
-      ),
-      backgroundColor: `hsl(${(index + 1) * 60}, 70%, 50%)`,
-    })) || []; // Default to an empty array if no data
+      );
+
+      // Insert a null value for the break time
+      lineData.splice(4, 0, null); // Insert null at index 4 (for 1 PM - 2 PM)
+
+      return {
+        label: `Line ${line.lineNumber || `Unknown`}`,
+        data: lineData,
+        backgroundColor: `hsl(${(index + 1) * 60}, 70%, 50%)`,
+      };
+    }) || []; // Default to an empty array if no data
 
   const chartData = {
     labels: hours,
@@ -77,14 +89,16 @@ const HourlyProductionCharts = ({ production }) => {
         callbacks: {
           label: (context) => {
             const efficiency = context.raw;
-            return `Efficiency: ${efficiency}%`;
+            return efficiency === null
+              ? "Break Time" // Show "Break Time" for null values
+              : `Efficiency: ${efficiency}%`;
           },
         },
       },
       datalabels: {
         anchor: "center",
         align: "center",
-        formatter: (value) => `${value}%`,
+        formatter: (value) => (value === null ? "" : `${value}%`), // No label for break time
         color: "white",
         font: {
           weight: "bold",
