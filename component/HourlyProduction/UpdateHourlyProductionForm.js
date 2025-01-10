@@ -40,21 +40,20 @@ const UpdateHourlyProductionWithCalendar = () => {
       if (response.status === 404) {
         setProductionData(null);
         setError("No production data found for the selected date.");
+        setOtData([]);
         return;
       }
       if (!response.ok) throw new Error("Failed to fetch production data.");
       const data = await response.json();
       setProductionData(data[0]);
 
-      // Initialize OT data
-      setOtData(
-        data[0].lines.map(() => ({
-          hours: "",
-          menPower: "",
-          pieces: "",
-          minutes: 0,
-        }))
-      );
+      const fetchedOtData = data[0].lines.map((line) => ({
+        hours: line.otData?.otHours || "",
+        menPower: line.otData?.otMenPower || "",
+        pieces: line.otData?.otPieces || "",
+        minutes: line.otData?.otMinutes || 0,
+      }));
+      setOtData(fetchedOtData);
     } catch (error) {
       console.error("Error fetching production data:", error);
       setError("Failed to fetch production data.");
@@ -100,7 +99,7 @@ const UpdateHourlyProductionWithCalendar = () => {
       console.log("Payload being sent to the API:", payload);
 
       const response = await fetch("/api/othours/overtime", {
-        method: "POST",
+        method: "PUT", // Changed from POST to PUT
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -151,7 +150,7 @@ const UpdateHourlyProductionWithCalendar = () => {
     const updatedProduction = { ...productionData };
     const line = updatedProduction.lines[lineIndex];
 
-    const pieces = parseFloat(value) || 0;
+    const pieces = value === "" ? "" : Number(value); // Allow 0 as a valid value
     const SAM = parseFloat(line.SAM) || 0;
     const operator = parseInt(line.operator) || 0;
     const helper = parseInt(line.helper) || 0;
@@ -203,7 +202,7 @@ const UpdateHourlyProductionWithCalendar = () => {
           hourlyData: line.hourlyData.map((hour, idx) => {
             if (idx === hourIndex) {
               const pieces = parseFloat(hour.pieces) || 0;
-              const em = line.SAM * pieces || 0;
+              const em = line.SAM * (pieces || 0);
               const am = (line.operator + line.helper) * 60 || 0;
               const efficiency = am > 0 ? Math.round((em / am) * 100) : 0;
 
@@ -380,7 +379,11 @@ const UpdateHourlyProductionWithCalendar = () => {
                       <>
                         <TableCell key={`pieces-${hourIndex}-${idx}`}>
                           <TextField
-                            value={line.hourlyData[hourIndex]?.pieces || ""}
+                            value={
+                              line.hourlyData[hourIndex]?.pieces === 0
+                                ? "0" // Ensure "0" is displayed
+                                : line.hourlyData[hourIndex]?.pieces || "" // Handle empty string
+                            }
                             onChange={(e) =>
                               handleHourlyChange(idx, hourIndex, e.target.value)
                             }

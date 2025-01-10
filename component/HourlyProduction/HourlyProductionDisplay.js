@@ -61,24 +61,25 @@ const HourlyProductionDisplay = () => {
 
   // Helper function to calculate total pieces and average efficiency
 
-  const calculateTotals = (hourlyData) => {
-    const totalPieces = hourlyData.reduce(
-      (sum, hour) => sum + (hour.pieces || 0),
-      0
-    );
-    const totalEfficiency = hourlyData.reduce(
-      (sum, hour) => sum + (hour.efficiency || 0),
-      0
-    );
+  const calculateTotals = (hourlyData = []) => {
+    const totalPieces = hourlyData.reduce((sum, hour) => {
+      return sum + (hour?.pieces || 0); // Check if hour is defined and get pieces
+    }, 0);
+
+    const totalEfficiency = hourlyData.reduce((sum, hour) => {
+      return sum + (hour?.efficiency || 0); // Check if hour is defined and get efficiency
+    }, 0);
+
     const avgEfficiency =
       hourlyData.length > 0
         ? (totalEfficiency / hourlyData.length).toFixed(2)
         : 0;
+
     return { totalPieces, avgEfficiency };
   };
 
   return (
-    <Box sx={{ padding: 2 }}>
+    <Box sx={{ padding: 5, position: "relative", top: 60 }}>
       <Typography variant="h4" gutterBottom>
         Hourly Production Data
       </Typography>
@@ -98,6 +99,101 @@ const HourlyProductionDisplay = () => {
 
       {selectedProduction ? (
         <Box>
+          {/* Total Production and Efficiency */}
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  sx={{
+                    border: "1px solid black",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    backgroundColor: "#e9ecef",
+                  }}
+                  colSpan={selectedProduction.lines.length * 2 + 1} // Spans across the table
+                >
+                  {`Date: ${selectedProduction.date}`}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell
+                  sx={{
+                    border: "1px solid black",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    backgroundColor: "#f8f9fa",
+                  }}
+                >
+                  Total Production
+                </TableCell>
+                <TableCell
+                  sx={{
+                    border: "1px solid black",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    backgroundColor: "#f8f9fa",
+                  }}
+                >
+                  Total Efficiency
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                {/* Calculate Total Production */}
+                <TableCell
+                  sx={{
+                    border: "1px solid black",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                    backgroundColor: "#f0f8ff",
+                  }}
+                >
+                  {selectedProduction.lines.reduce((total, line) => {
+                    const { totalPieces } = calculateTotals(line.hourlyData);
+                    const otPieces = line.otData?.otPieces || 0;
+                    return total + totalPieces + otPieces;
+                  }, 0)}{" "}
+                  {/* Total Production */}
+                </TableCell>
+
+                {/* Calculate Total Efficiency */}
+                <TableCell
+                  sx={{
+                    border: "1px solid black",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                    backgroundColor: "#f0f8ff",
+                  }}
+                >
+                  {(() => {
+                    let totalEM = 0;
+                    let totalAM = 0;
+                    selectedProduction.lines.forEach((line) => {
+                      const { totalPieces } = calculateTotals(line.hourlyData);
+                      const otPieces = line.otData?.otPieces || 0;
+                      const SAM = line.SAM || 0;
+
+                      const EM = (totalPieces + otPieces) * SAM;
+                      const availableMinutes =
+                        (line.operator + line.helper) * line.shiftTime;
+                      const otMinutes = line.otData?.otMinutes || 0;
+                      const AM = availableMinutes + otMinutes;
+
+                      totalEM += EM;
+                      totalAM += AM;
+                    });
+
+                    return totalAM > 0
+                      ? ((totalEM / totalAM) * 100).toFixed(2)
+                      : 0;
+                  })()}{" "}
+                  % {/* Total Efficiency */}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+
           <Typography variant="h6" gutterBottom>
             {`Date: ${selectedProduction.date}`}
           </Typography>
@@ -125,6 +221,7 @@ const HourlyProductionDisplay = () => {
                 { label: "Operator", key: "operator" },
                 { label: "Helper", key: "helper" },
                 { label: "Shift Time", key: "shiftTime" },
+                { label: "Available Minutes", key: "availableMinutes" }, // New column
                 { label: "Target 100%", key: "target100" },
                 { label: "Target 75%", key: "target75" },
                 { label: "Target / Hour", key: "targetPerHour" },
@@ -133,20 +230,64 @@ const HourlyProductionDisplay = () => {
                   <TableCell sx={{ border: "1px solid black" }}>
                     {field.label}
                   </TableCell>
-                  {selectedProduction.lines.map((line, lineIdx) => (
-                    <TableCell
-                      key={lineIdx}
-                      colSpan={2}
-                      sx={{
-                        border: "1px solid black",
-                        textAlign: "center",
-                      }}
-                    >
-                      {line[field.key] || 0}
-                    </TableCell>
-                  ))}
+                  {selectedProduction.lines.map((line, lineIdx) => {
+                    // Calculate Available Minutes
+                    let value = line[field.key] || 0;
+                    if (field.key === "availableMinutes") {
+                      value =
+                        (line.operator + line.helper) * line.shiftTime || 0;
+                    }
+                    return (
+                      <TableCell
+                        key={lineIdx}
+                        colSpan={2}
+                        sx={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        {value}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))}
+
+              {/* Add OT Data Row */}
+              {selectedProduction.lines.some((line) => line.otData) && (
+                <TableRow>
+                  <TableCell
+                    sx={{ border: "1px solid black", fontWeight: "bold" }}
+                  >
+                    OT Data (After 5:00 PM)
+                  </TableCell>
+
+                  {selectedProduction.lines.map((line, lineIdx) => {
+                    const { otHours, otMenPower, otPieces, otMinutes } =
+                      line.otData || {};
+                    return (
+                      <React.Fragment key={lineIdx}>
+                        <TableCell
+                          sx={{
+                            border: "1px solid black",
+                            textAlign: "center",
+                            backgroundColor: "#f0f8ff",
+                          }}
+                          colSpan={2}
+                        >
+                          <Typography variant="body2">
+                            Hours: {otHours || 0}, Men Power: {otMenPower || 0}
+                          </Typography>
+                          <Typography variant="body2">
+                            Pieces: {otPieces || 0}, Minutes: {otMinutes || 0}
+                          </Typography>
+                        </TableCell>
+                      </React.Fragment>
+                    );
+                  })}
+                </TableRow>
+              )}
+
               <TableRow>
                 <TableCell sx={{ border: "1px solid black" }}>Hours</TableCell>
                 {selectedProduction.lines.map((_, idx) => (
@@ -222,6 +363,114 @@ const HourlyProductionDisplay = () => {
                         }}
                       >
                         {avgEfficiency}%
+                      </TableCell>
+                    </React.Fragment>
+                  );
+                })}
+              </TableRow>
+
+              {/* OT Pieces and Efficiency Row */}
+              {selectedProduction.lines.some((line) => line.otData) && (
+                <TableRow>
+                  <TableCell
+                    sx={{ border: "1px solid black", fontWeight: "bold" }}
+                  >
+                    OT Data
+                  </TableCell>
+                  {selectedProduction.lines.map((line, lineIdx) => {
+                    const { otPieces, otMinutes, otHours, otMenPower } =
+                      line.otData || {};
+                    const SAM = line.SAM || 0;
+
+                    // Calculate OT Efficiency
+                    const otEfficiency =
+                      otMinutes > 0
+                        ? ((otPieces * SAM) / (otMenPower * 60 * otHours)) * 100
+                        : 0;
+
+                    return (
+                      <React.Fragment key={lineIdx}>
+                        <TableCell
+                          sx={{
+                            border: "1px solid black",
+                            textAlign: "center",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {otPieces || 0}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            border: "1px solid black",
+                            textAlign: "center",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {otEfficiency.toFixed(2)}%
+                        </TableCell>
+                      </React.Fragment>
+                    );
+                  })}
+                </TableRow>
+              )}
+              {/* Grand Totals and Efficiency */}
+              <TableRow>
+                <TableCell
+                  sx={{
+                    border: "1px solid black",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    backgroundColor: "#f8f9fa",
+                  }}
+                >
+                  Grand Total
+                </TableCell>
+                {selectedProduction.lines.map((line, lineIdx) => {
+                  const hourlyData = line.hourlyData || []; // Ensure default empty array
+                  const { totalPieces, avgEfficiency } =
+                    calculateTotals(hourlyData);
+
+                  const otData = line.otData || {}; // Ensure default object
+                  const otPieces = otData.otPieces || 0;
+                  const SAM = line.SAM || 0;
+
+                  // Grand Total Pieces
+                  const grandTotalPieces = totalPieces + otPieces;
+
+                  // Effective Minutes (EM)
+                  const EM = grandTotalPieces * SAM;
+
+                  // Available Minutes (AM)
+                  const availableMinutes =
+                    (line.operator + line.helper) * line.shiftTime;
+                  const otMinutes = otData.otMinutes || 0;
+                  const AM = availableMinutes + otMinutes;
+
+                  // Grand Efficiency
+                  const grandEfficiency =
+                    AM > 0 ? ((EM / AM) * 100).toFixed(2) : 0;
+
+                  return (
+                    <React.Fragment key={lineIdx}>
+                      <TableCell
+                        sx={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                          fontWeight: "bold",
+                          backgroundColor: "#f0f8ff",
+                        }}
+                      >
+                        {grandTotalPieces} {/* Grand Total Pieces */}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          border: "1px solid black",
+                          textAlign: "center",
+                          fontWeight: "bold",
+                          backgroundColor: "#f0f8ff",
+                        }}
+                      >
+                        {grandEfficiency}% {/* Grand Efficiency */}
                       </TableCell>
                     </React.Fragment>
                   );

@@ -66,7 +66,7 @@ function NavHourlyProduction(props) {
       <AppBar
         component="nav"
         sx={{
-          backgroundColor: "steelblue",
+          backgroundColor: "whitesmoke",
         }}
       >
         <Toolbar>

@@ -92,7 +92,7 @@ const HourlyProductionForm = () => {
 
   const handleHourlyChange = (lineIndex, hourIndex, value) => {
     const updatedLines = [...lines];
-    const pieces = value === "" ? "" : parseFloat(value); // Allow 0 as a valid value
+    const pieces = value === "" ? "" : Number(value); // Allow 0 as a valid value
     const SAM = parseFloat(updatedLines[lineIndex].SAM) || 0;
     const operator = parseInt(updatedLines[lineIndex].operator) || 0;
     const helper = parseInt(updatedLines[lineIndex].helper) || 0;
@@ -104,7 +104,7 @@ const HourlyProductionForm = () => {
       };
     }
 
-    const em = SAM * pieces;
+    const em = SAM * (pieces || 0);
     const am = (operator + helper) * 60;
     const efficiency = am > 0 ? Math.round((em / am) * 100) : 0;
 
@@ -297,7 +297,11 @@ const HourlyProductionForm = () => {
                           </Typography>
                         ) : (
                           <TextField
-                            value={line.hourlyData[hourIndex]?.pieces || ""}
+                            value={
+                              line.hourlyData[hourIndex]?.pieces === 0
+                                ? "0" // Ensure "0" is displayed
+                                : line.hourlyData[hourIndex]?.pieces || "" // Handle empty string
+                            }
                             onChange={(e) =>
                               handleHourlyChange(
                                 lineIndex,
