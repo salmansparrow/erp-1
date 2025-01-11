@@ -1,4 +1,3 @@
-import * as React from "react";
 import PropTypes from "prop-types";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -14,11 +13,14 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import Link from "next/link"; // Import Link
+import Link from "next/link";
 import logo from "../../public/images/logo/logo.png";
 import Image from "next/image";
+import { useState } from "react";
+import { Menu, MenuItem } from "@mui/material";
 
 const drawerWidth = 240;
+
 const navItems = [
   { label: "Add Hourly Production", path: "/hourlyproduction" },
   { label: "Hourly Production DashBoard", path: "/hourlydashboard" },
@@ -29,14 +31,23 @@ const navItems = [
 
 function NavHourlyProduction(props) {
   const { window } = props;
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null); // For dropdown
 
   const handleDrawerToggle = () => {
     setMobileOpen((prevState) => !prevState);
   };
 
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   const drawer = (
-    <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
+    <Box sx={{ textAlign: "center" }}>
       <Typography variant="h6" sx={{ my: 2 }}>
         <Link href="/hourlydashboard">
           <Image src={logo} alt="logo" height={80} width={100} priority />
@@ -53,6 +64,35 @@ function NavHourlyProduction(props) {
             </Link>
           </ListItem>
         ))}
+
+        {/* Summary Dropdown */}
+        <ListItem
+          sx={{
+            textAlign: "center",
+            color: "black",
+          }}
+        >
+          <ListItemButton
+            onClick={(e) => {
+              handleMenuClick(e); // Open dropdown
+            }}
+          >
+            <ListItemText primary="Summary" sx={{ cursor: "pointer" }} />
+          </ListItemButton>
+        </ListItem>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+        >
+          <MenuItem
+            onClick={handleMenuClose} // Close the dropdown
+          >
+            <Link href="/linesummary" passHref sx>
+              Line Summary Chart
+            </Link>
+          </MenuItem>
+        </Menu>
       </List>
     </Box>
   );
@@ -94,6 +134,27 @@ function NavHourlyProduction(props) {
                 <Button sx={{ color: "black" }}>{item.label}</Button>
               </Link>
             ))}
+            {/* Summary Dropdown */}
+            <Button
+              sx={{ color: "black" }}
+              onClick={handleMenuClick}
+              aria-controls="summary-menu"
+              aria-haspopup="true"
+            >
+              Summary
+            </Button>
+            <Menu
+              id="summary-menu"
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={handleMenuClose}>
+                <Link href="/linesummary" passHref>
+                  Line Summary Chart
+                </Link>
+              </MenuItem>
+            </Menu>
           </Box>
         </Toolbar>
       </AppBar>
