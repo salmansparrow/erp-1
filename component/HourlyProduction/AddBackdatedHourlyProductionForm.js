@@ -196,9 +196,8 @@ const AddBackdatedHourlyProductionForm = () => {
       <Box
         sx={{
           padding: { xs: 2, md: 5 },
-          mt: {
-            lg: 10,
-          },
+          position: "relative",
+          top: 50,
         }}
       >
         <Typography

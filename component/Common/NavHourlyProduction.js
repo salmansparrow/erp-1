@@ -1,3 +1,4 @@
+import * as React from "react";
 import PropTypes from "prop-types";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -13,38 +14,56 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import Link from "next/link";
+import Link from "next/link"; // Import Link
 import logo from "../../public/images/logo/logo.png";
 import Image from "next/image";
-import { useState } from "react";
 import { Menu, MenuItem } from "@mui/material";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown"; // Import ArrowDropDownIcon
+import { useRouter } from "next/router";
 
 const drawerWidth = 240;
 
 const navItems = [
-  { label: "Add Hourly Production", path: "/hourlyproduction" },
   { label: "Hourly Production DashBoard", path: "/hourlydashboard" },
   { label: "View Hourly Production Data", path: "/viewhourlyproduction" },
+];
+
+const addDataItems = [
+  { label: "Add Hourly Production", path: "/hourlyproduction" },
   { label: "Update Production Data", path: "/updatehourlyproduction" },
   { label: "Add BackDate Data", path: "/addbackdatedhourlyproduction" },
 ];
 
+const summaryItems = [
+  { label: "Line Summary", path: "/linesummary" },
+  { label: "Floor Summary", path: "/floorsummary" },
+];
+
 function NavHourlyProduction(props) {
   const { window } = props;
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null); // For dropdown
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [anchorElSummary, setAnchorElSummary] = React.useState(null); // For "Summary" dropdown
+  const [anchorElAddData, setAnchorElAddData] = React.useState(null); // For "Add Data" dropdown
+  const router = useRouter(); // Use router for active link detection
 
   const handleDrawerToggle = () => {
     setMobileOpen((prevState) => !prevState);
   };
 
-  const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
+  const handleSummaryMenuClick = (event) => {
+    setAnchorElSummary(event.currentTarget);
+  };
+
+  const handleAddDataMenuClick = (event) => {
+    setAnchorElAddData(event.currentTarget);
   };
 
   const handleMenuClose = () => {
-    setAnchorEl(null);
+    setAnchorElSummary(null);
+    setAnchorElAddData(null);
   };
+
+  const isActive = (path) => router.pathname === path;
 
   const drawer = (
     <Box sx={{ textAlign: "center" }}>
@@ -55,44 +74,38 @@ function NavHourlyProduction(props) {
       </Typography>
       <Divider />
       <List>
+        {/* Add Data Dropdown */}
+        <ListItem>
+          <ListItemButton onClick={handleAddDataMenuClick}>
+            <ListItemText primary="Add Data" sx={{ cursor: "pointer" }} />
+            <ArrowDropDownIcon />
+          </ListItemButton>
+        </ListItem>
+        {/* Regular Navigation Items */}
         {navItems.map((item) => (
           <ListItem key={item.label}>
-            <Link href={item.path} passHref>
-              <ListItemButton sx={{ textAlign: "center", color: "black" }}>
+            <Link href={item.path} passHref style={{ textDecoration: "none" }}>
+              <ListItemButton
+                sx={{
+                  textAlign: "left",
+                  color: "black",
+                  backgroundColor: isActive(item.path)
+                    ? "#e0e0e0"
+                    : "transparent",
+                }}
+              >
                 <ListItemText primary={item.label} />
               </ListItemButton>
             </Link>
           </ListItem>
         ))}
-
         {/* Summary Dropdown */}
-        <ListItem
-          sx={{
-            textAlign: "center",
-            color: "black",
-          }}
-        >
-          <ListItemButton
-            onClick={(e) => {
-              handleMenuClick(e); // Open dropdown
-            }}
-          >
+        <ListItem>
+          <ListItemButton onClick={handleSummaryMenuClick}>
             <ListItemText primary="Summary" sx={{ cursor: "pointer" }} />
+            <ArrowDropDownIcon />
           </ListItemButton>
         </ListItem>
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
-        >
-          <MenuItem
-            onClick={handleMenuClose} // Close the dropdown
-          >
-            <Link href="/linesummary" passHref sx>
-              Line Summary Chart
-            </Link>
-          </MenuItem>
-        </Menu>
       </List>
     </Box>
   );
@@ -106,7 +119,7 @@ function NavHourlyProduction(props) {
       <AppBar
         component="nav"
         sx={{
-          backgroundColor: "whitesmoke",
+          backgroundColor: "turquoise",
         }}
       >
         <Toolbar>
@@ -129,31 +142,93 @@ function NavHourlyProduction(props) {
             </Link>
           </Typography>
           <Box sx={{ display: { xs: "none", sm: "block" } }}>
+            {/* Add Data Dropdown */}
+            <Button
+              sx={{ color: "black" }}
+              onClick={handleAddDataMenuClick}
+              aria-controls="add-data-menu"
+              aria-haspopup="true"
+              endIcon={<ArrowDropDownIcon />}
+            >
+              Add Data
+            </Button>
+            <Menu
+              id="add-data-menu"
+              anchorEl={anchorElAddData}
+              open={Boolean(anchorElAddData)}
+              onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "left",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "left",
+              }}
+            >
+              {addDataItems.map((item) => (
+                <MenuItem onClick={handleMenuClose} key={item.label}>
+                  <Link
+                    href={item.path}
+                    passHref
+                    style={{ textDecoration: "none", color: "black" }}
+                  >
+                    {item.label}
+                  </Link>
+                </MenuItem>
+              ))}
+            </Menu>
+            {/* Regular Navigation Items */}
             {navItems.map((item) => (
               <Link href={item.path} passHref key={item.label}>
-                <Button sx={{ color: "black" }}>{item.label}</Button>
+                <Button
+                  sx={{
+                    color: "black",
+                    backgroundColor: isActive(item.path)
+                      ? "#e0e0e0"
+                      : "transparent",
+                    borderRadius: 1,
+                  }}
+                >
+                  {item.label}
+                </Button>
               </Link>
             ))}
             {/* Summary Dropdown */}
             <Button
               sx={{ color: "black" }}
-              onClick={handleMenuClick}
+              onClick={handleSummaryMenuClick}
               aria-controls="summary-menu"
               aria-haspopup="true"
+              endIcon={<ArrowDropDownIcon />}
             >
               Summary
             </Button>
             <Menu
               id="summary-menu"
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
+              anchorEl={anchorElSummary}
+              open={Boolean(anchorElSummary)}
               onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "left",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "left",
+              }}
             >
-              <MenuItem onClick={handleMenuClose}>
-                <Link href="/linesummary" passHref>
-                  Line Summary Chart
-                </Link>
-              </MenuItem>
+              {summaryItems.map((item) => (
+                <MenuItem onClick={handleMenuClose} key={item.label}>
+                  <Link
+                    href={item.path}
+                    passHref
+                    style={{ textDecoration: "none", color: "black" }}
+                  >
+                    {item.label}
+                  </Link>
+                </MenuItem>
+              ))}
             </Menu>
           </Box>
         </Toolbar>
@@ -165,13 +240,14 @@ function NavHourlyProduction(props) {
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
+            keepMounted: true,
           }}
           sx={{
             display: { xs: "block", sm: "none" },
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
+              background: "white",
             },
           }}
         >

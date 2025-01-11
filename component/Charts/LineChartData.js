@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Box, Typography, TextField, Button, Grid } from "@mui/material";
+import { Box, Typography, TextField, Button, Grid, Grid2 } from "@mui/material";
 
 ChartJS.register(
   CategoryScale,
@@ -112,9 +112,9 @@ const LineChartData = () => {
       <Typography variant="h4" gutterBottom>
         Efficiency Trends
       </Typography>
-      <Grid container spacing={2}>
+      <Grid2 container spacing={2}>
         {/* Start Date */}
-        <Grid item xs={12} md={5}>
+        <Grid2 item xs={12} md={5}>
           <TextField
             label="Start Date"
             type="date"
@@ -125,10 +125,10 @@ const LineChartData = () => {
               shrink: true,
             }}
           />
-        </Grid>
+        </Grid2>
 
         {/* End Date */}
-        <Grid item xs={12} md={5}>
+        <Grid2 item xs={12} md={5}>
           <TextField
             label="End Date"
             type="date"
@@ -139,10 +139,10 @@ const LineChartData = () => {
               shrink: true,
             }}
           />
-        </Grid>
+        </Grid2>
 
         {/* Fetch Button */}
-        <Grid item xs={12} md={2}>
+        <Grid2 item xs={12} md={2}>
           <Button
             variant="contained"
             color="primary"
@@ -151,8 +151,8 @@ const LineChartData = () => {
           >
             Fetch Data
           </Button>
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
 
       {/* Line Chart */}
       <Box sx={{ mt: 5 }}>

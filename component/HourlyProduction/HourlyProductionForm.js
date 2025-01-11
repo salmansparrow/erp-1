@@ -197,7 +197,7 @@ const HourlyProductionForm = () => {
   };
 
   return (
-    <Box sx={{ padding: { xs: 2, md: 5 } }}>
+    <Box sx={{ padding: { xs: 2, md: 5, position: "relative", top: 50 } }}>
       <Typography
         variant="h4"
         gutterBottom
@@ -211,7 +211,7 @@ const HourlyProductionForm = () => {
       </Typography>
 
       <Box sx={{ overflowX: "auto", marginBottom: 4 }}>
-        <Table>
+        <Table sx={{ minWidth: { xs: 600, sm: "100%" } }}>
           <TableHead>
             <TableRow>
               <TableCell>Field Name</TableCell>
