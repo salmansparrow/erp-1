@@ -90,7 +90,7 @@ const ChartPage = () => {
     <LayoutOfHourlyProduction>
       <Box
         sx={{
-          mt: { lg: 10, xs: 2 },
+          mt: { lg: 10, xs: 8 },
           px: 2,
         }}
       >

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -24,6 +24,35 @@ ChartJS.register(
 );
 
 const HourlyProductionCharts = ({ production }) => {
+  const [chartSize, setChartSize] = useState({
+    width: window.innerWidth > 1200 ? 800 : window.innerWidth - 50, // Larger size for desktop
+    height:
+      window.innerWidth > 1200 ? 500 : window.innerWidth < 600 ? 400 : 450, // Larger size for desktop
+  });
+
+  // Update chart size dynamically on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const width =
+        window.innerWidth > 1200
+          ? 800 // Large size for laptop/desktop
+          : window.innerWidth - 50; // Small size for mobile/tablet
+      const height =
+        window.innerWidth > 1200
+          ? 500 // Larger height for desktop
+          : window.innerWidth < 600
+          ? 400 // Smaller height for mobile
+          : 450; // Medium height for tablets
+      setChartSize({ width, height });
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   // Define hours including the break statically
   const hours = [
     "9:00 am",
@@ -61,6 +90,7 @@ const HourlyProductionCharts = ({ production }) => {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false, // Allows dynamic resizing
     plugins: {
       legend: {
         position: "top",
@@ -102,7 +132,8 @@ const HourlyProductionCharts = ({ production }) => {
         color: "white",
         font: {
           weight: "bold",
-          size: 14,
+          size:
+            window.innerWidth > 1200 ? 16 : window.innerWidth < 600 ? 10 : 14, // Adjust font size based on screen size
         },
         rotation: 270, // Rotate the text vertically
       },
@@ -125,7 +156,17 @@ const HourlyProductionCharts = ({ production }) => {
     },
   };
 
-  return <Bar data={chartData} options={options} />;
+  return (
+    <div
+      style={{
+        width: chartSize.width,
+        height: chartSize.height,
+        margin: "0 auto",
+      }}
+    >
+      <Bar data={chartData} options={options} />
+    </div>
+  );
 };
 
 export default HourlyProductionCharts;
