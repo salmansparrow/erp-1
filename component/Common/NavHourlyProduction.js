@@ -36,7 +36,7 @@ const addDataItems = [
 
 const summaryItems = [
   { label: "Line Summary", path: "/linesummary" },
-  { label: "Floor Summary", path: "/floorsummary" },
+  { label: "Floor Summary", path: "/summary/floorsummarypage" },
 ];
 
 function NavHourlyProduction(props) {
