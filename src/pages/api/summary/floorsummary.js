@@ -5,70 +5,66 @@ export default async function handler(req, res) {
   await dbConnect();
 
   if (req.method === "GET") {
-    const { date } = req.query; // Extract date from query
+    const { startDate, endDate } = req.query;
 
-    if (!date) {
-      return res.status(400).json({ message: "Date parameter is required." });
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        message: "Both startDate and endDate parameters are required.",
+      });
     }
 
     try {
-      // Find data matching the date
-      const productionData = await HourlyProduction.find({ date });
+      const productionData = await HourlyProduction.find({
+        date: {
+          $gte: startDate, // Greater than or equal to startDate
+          $lte: endDate, // Less than or equal to endDate
+        },
+      }).sort({ date: 1 }); // Sort by date in ascending order
 
       if (!productionData || productionData.length === 0) {
         return res.status(404).json({
-          message: `No data available for the selected date: ${date}.`,
+          message: `No data available for the selected range: ${startDate} to ${endDate}.`,
         });
       }
 
-      // Aggregate floor summary data
-      const floorSummary = productionData.reduce(
-        (summary, entry) => {
-          entry.lines.forEach((line) => {
-            // Add hourly data for pieces
-            const lineTotalPieces = line.hourlyData.reduce(
-              (sum, hour) => sum + (hour?.pieces || 0),
-              0
-            );
+      // Aggregate data
 
-            // Calculate line efficiency contribution
-            const lineTotalEfficiency = line.hourlyData.reduce(
-              (sum, hour) => sum + (hour?.efficiency || 0),
-              0
-            );
+      const summary = productionData.map((entry) => {
+        let totalProduction = 0;
+        let totalEm = 0; // Effective Minutes
+        let totalAm = 0; // Available Minutes
 
-            summary.totalPieces += lineTotalPieces;
-            summary.totalEfficiency += lineTotalEfficiency;
-            summary.totalOperators += line.operator || 0;
-            summary.totalHelpers += line.helper || 0;
-            summary.totalProduction += lineTotalPieces; // Add to total production
-            summary.totalLines += 1;
-          });
-          return summary;
-        },
-        {
-          totalPieces: 0,
-          totalEfficiency: 0,
-          totalOperators: 0,
-          totalHelpers: 0,
-          totalProduction: 0, // Initialize total production
-          totalLines: 0,
-        }
-      );
+        entry.lines.forEach((line) => {
+          const SAM = line.SAM || 0;
+          const shiftTime = line.shiftTime || 0;
+          const operator = line.operator || 0;
+          const helper = line.helper || 0;
 
-      // Calculate average efficiency
-      const averageEfficiency =
-        floorSummary.totalLines > 0
-          ? floorSummary.totalEfficiency / floorSummary.totalLines
-          : 0;
+          const totalPieces = line.hourlyData.reduce(
+            (sum, hour) => sum + (hour?.pieces || 0),
+            0
+          );
+          const otPieces = line.otData?.otPieces || 0;
+          const EM = (totalPieces + otPieces) * SAM;
+          const availableMinutes = (operator + helper) * shiftTime;
+          const otMinutes = line.otData?.otMinutes || 0;
 
-      res.status(200).json({
-        totalPieces: floorSummary.totalPieces,
-        totalProduction: floorSummary.totalProduction, // Include total production
-        averageEfficiency: averageEfficiency.toFixed(2),
-        totalOperators: floorSummary.totalOperators,
-        totalHelpers: floorSummary.totalHelpers,
+          const AM = availableMinutes + otMinutes;
+
+          totalProduction += totalPieces + otPieces;
+          totalEm += EM;
+          totalAm += AM;
+        });
+        const efficiency = totalAm > 0 ? (totalEm / totalAm) * 100 : 0;
+
+        return {
+          date: entry.date,
+          totalProduction,
+          efficiency: efficiency.toFixed(2),
+        };
       });
+
+      res.status(200).json(summary);
     } catch (error) {
       console.error("Error fetching floor summary:", error);
       res.status(500).json({ message: "Server error." });

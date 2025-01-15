@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+  BarElement,
   PointElement,
   LineElement,
   Title,
   Tooltip,
   Legend,
-  Filler,
 } from "chart.js";
 import {
   Box,
@@ -17,74 +16,50 @@ import {
   CircularProgress,
   Card,
   CardContent,
+  Button,
+  TextField,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css"; // Import default styles
+import { Chart } from "react-chartjs-2";
 
-// Register necessary components
+// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
+  BarElement,
   PointElement,
   LineElement,
   Title,
   Tooltip,
-  Legend,
-  Filler
+  Legend
 );
 
 function FloorSummaryChart() {
-  const [summaryData, setSummaryData] = useState(null);
+  const [summaryData, setSummaryData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [chartData, setChartData] = useState(null);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [error, setError] = useState(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const fetchSummaryData = async (date) => {
+  const fetchSummaryData = async (startDate, endDate) => {
     try {
       setLoading(true);
       setError(null);
       const response = await fetch(
-        `/api/summary/floorsummary?date=${date.toISOString().split("T")[0]}`
+        `/api/summary/floorsummary?startDate=${startDate}&endDate=${endDate}`
       );
       if (!response.ok) {
         const errorData = await response.json();
         setError(errorData.message);
-        setSummaryData(null);
-        setChartData(null);
+        setSummaryData([]);
         return;
       }
       const data = await response.json();
       setSummaryData(data);
-
-      // Prepare chart data
-      setChartData({
-        labels: [
-          "Total Pieces",
-          "Average Efficiency",
-          "Total Operators",
-          "Total Helpers",
-        ],
-        datasets: [
-          {
-            label: `Floor Summary for ${date.toISOString().split("T")[0]}`,
-            data: [
-              data.totalPieces,
-              parseFloat(data.averageEfficiency),
-              data.totalOperators,
-              data.totalHelpers,
-            ],
-            borderColor: "rgba(75,192,192,1)",
-            backgroundColor: "rgba(75,192,192,0.2)",
-            fill: true,
-          },
-        ],
-      });
     } catch (error) {
       console.error("Error fetching floor summary data:", error);
       setError("An error occurred while fetching floor summary data.");
@@ -93,9 +68,42 @@ function FloorSummaryChart() {
     }
   };
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-    fetchSummaryData(date);
+  const handleFetch = () => {
+    if (startDate && endDate) {
+      fetchSummaryData(startDate, endDate);
+    } else {
+      setError("Please select both start and end dates.");
+    }
+  };
+
+  const createComboChartData = () => {
+    if (!Array.isArray(summaryData) || summaryData.length === 0) {
+      return null;
+    }
+
+    return {
+      labels: summaryData.map((entry) => entry.date), // Dates as labels
+      datasets: [
+        {
+          type: "bar",
+          label: "Total Production",
+          data: summaryData.map((entry) => entry.totalProduction),
+          backgroundColor: "rgba(54, 162, 235, 0.6)",
+          borderColor: "rgba(54, 162, 235, 1)",
+          borderWidth: 1,
+          yAxisID: "y", // Bar chart uses primary Y-axis
+        },
+        {
+          type: "line",
+          label: "Efficiency (%)",
+          data: summaryData.map((entry) => entry.efficiency),
+          borderColor: "rgba(255, 99, 132, 1)",
+          backgroundColor: "rgba(255, 99, 132, 0.2)",
+          fill: true,
+          yAxisID: "y1", // Line chart uses secondary Y-axis
+        },
+      ],
+    };
   };
 
   return (
@@ -133,13 +141,33 @@ function FloorSummaryChart() {
       >
         <CardContent>
           <Typography variant="body1" sx={{ marginBottom: 2 }}>
-            Select a Date:
+            Select Start Date and End Date:
           </Typography>
-          <Calendar
-            onChange={handleDateChange}
-            value={selectedDate}
-            className="custom-calendar"
-          />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <TextField
+              label="Start Date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <TextField
+              label="End Date"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <Button
+              variant="contained"
+              onClick={handleFetch}
+              sx={{ alignSelf: "center" }}
+            >
+              Fetch Summary
+            </Button>
+          </Box>
         </CardContent>
       </Card>
 
@@ -157,45 +185,62 @@ function FloorSummaryChart() {
         </Box>
       )}
 
-      {chartData && (
+      {Array.isArray(summaryData) && summaryData.length > 0 && (
         <Box
           sx={{
             width: "100%",
-            maxWidth: isMobile ? "100%" : "900px",
+            maxWidth: "900px",
             marginTop: 4,
             padding: 3,
             backgroundColor: "white",
             boxShadow: 2,
             borderRadius: 2,
+            width: "100%",
+            maxWidth: "900px",
+            marginTop: 4,
+            padding: 3,
+            backgroundColor: "white",
+            boxShadow: 2,
+            borderRadius: 2,
+            height: isMobile ? "400px" : "600px", // Adjust height based on screen size
           }}
         >
-          <Box
-            sx={{
-              height: isMobile ? 300 : 500, // Adjust height based on screen size
+          <Chart
+            type="bar"
+            data={createComboChartData()}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: "top",
+                },
+              },
+              scales: {
+                y: {
+                  type: "linear",
+                  display: true,
+                  position: "left",
+                  title: {
+                    display: true,
+                    text: "Total Production (Pieces)",
+                  },
+                },
+                y1: {
+                  type: "linear",
+                  display: true,
+                  position: "right",
+                  title: {
+                    display: true,
+                    text: "Efficiency (%)",
+                  },
+                  grid: {
+                    drawOnChartArea: false,
+                  },
+                },
+              },
             }}
-          >
-            <Line
-              data={chartData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false, // Disable default aspect ratio
-                plugins: {
-                  legend: {
-                    position: "top",
-                  },
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    title: {
-                      display: true,
-                      text: "Values",
-                    },
-                  },
-                },
-              }}
-            />
-          </Box>
+          />
         </Box>
       )}
     </Box>
