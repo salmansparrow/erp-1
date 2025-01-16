@@ -196,6 +196,31 @@ const HourlyProductionForm = () => {
     }
   };
 
+  const handleFetchPreviousData = async () => {
+    try {
+      const response = await fetch("/api/hourlyproduction/previous");
+      if (!response.ok) {
+        const error = response.json();
+        alert(`Failed to fetch previous data: ${error.message}`);
+        return;
+      }
+      const previousData = await response.json();
+      // Populate the form with the fetched data
+      setLines(
+        previousData.lines.map((line) => ({
+          ...line,
+          isLineSaved: false, // Allow modifications
+          hourlyData: Array.from({ length: 8 }, () => ({
+            pieces: "",
+            efficiency: "",
+          })),
+        }))
+      );
+    } catch (error) {
+      alert("An error occurred while fetching previous data.");
+    }
+  };
+
   return (
     <Box sx={{ padding: { xs: 2, md: 5, position: "relative", top: 50 } }}>
       <Typography
@@ -209,7 +234,15 @@ const HourlyProductionForm = () => {
       >
         Hourly Production Target
       </Typography>
-
+      <Box sx={{ marginBottom: 4, textAlign: "right" }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleFetchPreviousData}
+        >
+          Load Previous Data
+        </Button>
+      </Box>
       <Box sx={{ overflowX: "auto", marginBottom: 4 }}>
         <Table sx={{ minWidth: { xs: 600, sm: "100%" } }}>
           <TableHead>
