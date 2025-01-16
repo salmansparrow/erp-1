@@ -11,7 +11,17 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { Box, Typography, TextField, Button, Grid } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Grid,
+  Card,
+  CardContent,
+  TextField,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 
 ChartJS.register(
   CategoryScale,
@@ -28,10 +38,14 @@ const EnhancedLineChart = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [chartData, setChartData] = useState(null);
+  const [error, setError] = useState(null);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const fetchLineData = async () => {
     if (!startDate || !endDate) {
-      alert("Please select both start and end dates!");
+      setError("Please select both start and end dates!");
       return;
     }
 
@@ -42,7 +56,7 @@ const EnhancedLineChart = () => {
 
       if (!response.ok) {
         const error = await response.json();
-        alert(`Error fetching data: ${error.message}`);
+        setError(`Error fetching data: ${error.message}`);
         return;
       }
 
@@ -57,11 +71,6 @@ const EnhancedLineChart = () => {
           borderColor: "blue",
           backgroundColor: "rgba(0, 0, 255, 0.1)",
           fill: true,
-          tension: 0.4,
-          pointStyle: "circle",
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          pieces: data.map((entry) => entry.lines[0]?.totalPieces || 0),
         },
         {
           label: "Line 2 Efficiency",
@@ -69,11 +78,6 @@ const EnhancedLineChart = () => {
           borderColor: "green",
           backgroundColor: "rgba(0, 255, 0, 0.1)",
           fill: true,
-          tension: 0.4,
-          pointStyle: "triangle",
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          pieces: data.map((entry) => entry.lines[1]?.totalPieces || 0),
         },
         {
           label: "Line 3 Efficiency",
@@ -81,18 +85,14 @@ const EnhancedLineChart = () => {
           borderColor: "red",
           backgroundColor: "rgba(255, 0, 0, 0.1)",
           fill: true,
-          tension: 0.4,
-          pointStyle: "rectRounded",
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          pieces: data.map((entry) => entry.lines[2]?.totalPieces || 0),
         },
       ];
 
       setChartData({ labels, datasets });
+      setError(null);
     } catch (error) {
       console.error("Error fetching data:", error);
-      alert("Failed to fetch data.");
+      setError("Failed to fetch data.");
     }
   };
 
@@ -115,15 +115,6 @@ const EnhancedLineChart = () => {
         })`,
         font: {
           size: 18,
-        },
-      },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const efficiency = context.raw;
-            const pieces = context.dataset.pieces[context.dataIndex]; // Access total pieces
-            return `Efficiency: ${efficiency}%, Pieces: ${pieces}`;
-          },
         },
       },
     },
@@ -152,65 +143,93 @@ const EnhancedLineChart = () => {
   };
 
   return (
-    <>
-      <Box sx={{ padding: 3, position: "relative", top: 50 }}>
-        <Typography variant="h4" gutterBottom>
-          Efficiency Trends
-        </Typography>
-        <Grid container spacing={2}>
-          {/* Start Date */}
-          <Grid item xs={12} md={5}>
+    <Box
+      sx={{
+        padding: { xs: 2, md: 5 },
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 3,
+        position: "relative",
+        top: 50,
+      }}
+    >
+      <Typography
+        variant="h4"
+        sx={{
+          fontSize: { xs: "1.8rem", md: "2.5rem" },
+          textAlign: "center",
+          marginBottom: 2,
+          fontWeight: 600,
+        }}
+      >
+        Efficiency Trends
+      </Typography>
+
+      <Card
+        sx={{
+          width: "100%",
+          maxWidth: isMobile ? "100%" : 500,
+          boxShadow: 3,
+          padding: 2,
+          textAlign: "center",
+        }}
+      >
+        <CardContent>
+          <Typography variant="body1" sx={{ marginBottom: 2 }}>
+            Select Start Date and End Date:
+          </Typography>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <TextField
               label="Start Date"
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
               fullWidth
-              InputLabelProps={{
-                shrink: true,
-              }}
             />
-          </Grid>
-
-          {/* End Date */}
-          <Grid item xs={12} md={5}>
             <TextField
               label="End Date"
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
               fullWidth
-              InputLabelProps={{
-                shrink: true,
-              }}
             />
-          </Grid>
-
-          {/* Fetch Button */}
-          <Grid item xs={12} md={2}>
             <Button
               variant="contained"
-              color="primary"
-              fullWidth
               onClick={fetchLineData}
+              sx={{ alignSelf: "center" }}
             >
               Fetch Data
             </Button>
-          </Grid>
-        </Grid>
+          </Box>
+        </CardContent>
+      </Card>
 
-        {/* Line Chart */}
-        <Box sx={{ mt: 5, height: { xs: 300, md: 500 } }}>
-          {chartData ? (
-            <Line data={chartData} options={options} />
-          ) : (
-            <Typography variant="body1" color="textSecondary">
-              Select a date range to view the line chart.
-            </Typography>
-          )}
+      {error && (
+        <Typography variant="h6" color="error" sx={{ marginTop: 2 }}>
+          {error}
+        </Typography>
+      )}
+
+      {chartData && (
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: "1200px",
+            marginTop: 4,
+            padding: 3,
+            backgroundColor: "white",
+            boxShadow: 2,
+            borderRadius: 2,
+            height: isMobile ? "400px" : "600px",
+          }}
+        >
+          <Line data={chartData} options={options} />
         </Box>
-      </Box>
-    </>
+      )}
+    </Box>
   );
 };
 
