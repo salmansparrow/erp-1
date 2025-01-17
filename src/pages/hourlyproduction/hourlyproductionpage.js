@@ -66,6 +66,8 @@ const HourlyProductionPage = () => {
     setLines(updatedLines);
   };
 
+  console.log(updatedLines);
+
   const handleSaveLines = async () => {
     // Logic for saving lines
     const linesToSave = lines.filter(
