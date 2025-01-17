@@ -18,7 +18,15 @@ const LineDataForm = ({
 }) => {
   return (
     <Box>
-      <Box sx={{ marginBottom: 4, textAlign: "right" }}>
+      <Box
+        sx={{
+          marginBottom: 4,
+          textAlign: {
+            xs: "center",
+            md: "right",
+          },
+        }}
+      >
         <Button
           variant="contained"
           color="primary"

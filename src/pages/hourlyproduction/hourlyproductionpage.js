@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Box, Typography } from "@mui/material";
 import LineDataForm from "../../../component/HourlyProduction/LineDataForm";
 import HourlyDataForm from "../../../component/HourlyProduction/HourlyDataForm";
+import LayoutOfHourlyProduction from "../../../component/Layout/Layout";
 
 const HourlyProductionPage = () => {
   const [lines, setLines] = useState(
@@ -65,8 +66,6 @@ const HourlyProductionPage = () => {
     updatedLines[lineIndex].hourlyData[hourIndex] = { pieces, efficiency };
     setLines(updatedLines);
   };
-
-  console.log(updatedLines);
 
   const handleSaveLines = async () => {
     // Logic for saving lines
@@ -173,22 +172,34 @@ const HourlyProductionPage = () => {
   };
 
   return (
-    <Box sx={{ padding: { xs: 2, md: 5 } }}>
-      <Typography variant="h4" textAlign="center" gutterBottom>
-        Hourly Production Management
-      </Typography>
-      <LineDataForm
-        lines={lines}
-        handleLineChange={handleLineChange}
-        handleSaveLines={handleSaveLines}
-        handleFetchPreviousData={handleFetchPreviousData}
-      />
-      <HourlyDataForm
-        lines={lines}
-        handleHourlyChange={handleHourlyChange}
-        handleSaveHourlyData={handleSaveHourlyData}
-      />
-    </Box>
+    <LayoutOfHourlyProduction>
+      <Box sx={{ padding: { xs: 2, md: 5, position: "relative", top: 50 } }}>
+        <Typography
+          variant="h4"
+          textAlign="center"
+          gutterBottom
+          sx={{
+            fontSize: {
+              xs: "1rem",
+              md: "1.5rem",
+            },
+          }}
+        >
+          Hourly Production Management
+        </Typography>
+        <LineDataForm
+          lines={lines}
+          handleLineChange={handleLineChange}
+          handleSaveLines={handleSaveLines}
+          handleFetchPreviousData={handleFetchPreviousData}
+        />
+        <HourlyDataForm
+          lines={lines}
+          handleHourlyChange={handleHourlyChange}
+          handleSaveHourlyData={handleSaveHourlyData}
+        />
+      </Box>
+    </LayoutOfHourlyProduction>
   );
 };
 

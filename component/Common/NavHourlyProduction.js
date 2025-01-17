@@ -29,7 +29,10 @@ const navItems = [
 ];
 
 const addDataItems = [
-  { label: "Add Hourly Production", path: "/hourlyproduction" },
+  {
+    label: "Add Hourly Production",
+    path: "/hourlyproduction/hourlyproductionpage",
+  },
   { label: "Update Production Data", path: "/updatehourlyproduction" },
   { label: "Add BackDate Data", path: "/addbackdatedhourlyproduction" },
 ];
