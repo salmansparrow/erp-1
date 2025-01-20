@@ -115,13 +115,14 @@ export async function getServerSideProps(context) {
   const selectedDate = context.query.date || null;
 
   try {
-    // Fetch available dates
+    // Fetch available dates directly from the API
     const datesResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/hourlyproduction`
+      "https://erp-1-tau.vercel.app/api/hourlyproduction"
     );
     if (!datesResponse.ok) {
       throw new Error("Failed to fetch available dates.");
     }
+
     const availableDatesData = await datesResponse.json();
     const availableDates = availableDatesData.map((item) =>
       new Date(item.date).toLocaleDateString("en-CA")
@@ -131,9 +132,9 @@ export async function getServerSideProps(context) {
     let initialChartData = null;
     if (selectedDate) {
       const chartResponse = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_BASE_URL
-        }/api/hourlyproduction?dates=${JSON.stringify([selectedDate])}`
+        `https://erp-1-tau.vercel.app/api/hourlyproduction?dates=${JSON.stringify(
+          [selectedDate]
+        )}`
       );
       if (chartResponse.ok) {
         const chartData = await chartResponse.json();
@@ -149,7 +150,7 @@ export async function getServerSideProps(context) {
       },
     };
   } catch (error) {
-    console.error("Error in getServerSideProps:", error);
+    console.error("Error in getServerSideProps:", error.message);
     return {
       props: {
         availableDates: [],
