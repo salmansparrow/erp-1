@@ -1,37 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import HourlyProductionCharts from "../../component/Charts/HourlyProductionCharts";
 import LayoutOfHourlyProduction from "../../component/Layout/Layout";
 import { Box, Typography, Grid, Paper } from "@mui/material";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
-const ChartPage = () => {
-  const [availableDates, setAvailableDates] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [chartData, setChartData] = useState(null);
+const ChartPage = ({
+  availableDates = [],
+  initialChartData = null,
+  initialSelectedDate = null,
+}) => {
+  const [selectedDate, setSelectedDate] = useState(initialSelectedDate);
+  const [chartData, setChartData] = useState(initialChartData);
   const [windowWidth, setWindowWidth] = useState(null);
 
-  // API se available dates fetch karna
-  const fetchAvailableDates = async () => {
-    try {
-      const response = await fetch("/api/hourlyproduction");
-      if (!response.ok) {
-        const error = await response.json();
-        alert(`Error: ${error.message}`);
-        return;
-      }
-      const data = await response.json();
-      const dates = data.map((production) =>
-        new Date(production.date).toLocaleDateString("en-CA")
-      ); // Fix timezone issue
-      setAvailableDates(dates);
-    } catch (error) {
-      console.error("Error fetching available dates:", error);
-      alert("Failed to fetch available dates.");
-    }
-  };
+  // Resize listener for responsiveness
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    setWindowWidth(window.innerWidth); // Initialize
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  // Selected date ka chart data fetch karna
+  // Fetch chart data on date selection
   const fetchChartData = async (date) => {
     try {
       const response = await fetch(
@@ -39,6 +30,7 @@ const ChartPage = () => {
       );
       if (!response.ok) {
         const error = await response.json();
+        console.error("Error fetching chart data:", error);
         alert(`Error: ${error.message}`);
         return;
       }
@@ -51,29 +43,11 @@ const ChartPage = () => {
   };
 
   useEffect(() => {
-    fetchAvailableDates();
-
-    // Add event listener for window resize
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    if (typeof window !== "undefined") {
-      setWindowWidth(window.innerWidth); // Initialize width on the client-side
-      window.addEventListener("resize", handleResize);
-    }
-
-    return () => {
-      if (typeof window !== "undefined") {
-        window.removeEventListener("resize", handleResize);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (selectedDate) {
+    if (selectedDate && selectedDate !== initialSelectedDate) {
       fetchChartData(selectedDate);
     }
   }, [selectedDate]);
 
-  // Calendar me available dates highlight karna
   const isDateAvailable = (date) => {
     const formattedDate =
       date instanceof Date ? date.toLocaleDateString("en-CA") : null;
@@ -82,24 +56,19 @@ const ChartPage = () => {
 
   const handleDateChange = (value) => {
     if (value instanceof Date) {
-      setSelectedDate(value.toLocaleDateString("en-CA"));
+      const formattedDate = value.toLocaleDateString("en-CA");
+      setSelectedDate(formattedDate);
     }
   };
 
   return (
     <LayoutOfHourlyProduction>
-      <Box
-        sx={{
-          mt: { lg: 10, xs: 8 },
-          px: 2,
-        }}
-      >
+      <Box sx={{ mt: { lg: 10, xs: 8 }, px: 2 }}>
         <Grid container spacing={3}>
-          {/* Calendar Section */}
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ p: 2 }}>
               <Typography variant="h6" gutterBottom>
-                Select a Date
+                Select a Date:
               </Typography>
               <Calendar
                 onChange={handleDateChange}
@@ -110,15 +79,13 @@ const ChartPage = () => {
               />
             </Paper>
           </Grid>
-
-          {/* Chart Section */}
           <Grid item xs={12} md={8}>
             <Paper elevation={3} sx={{ p: 2 }}>
               {selectedDate ? (
                 chartData ? (
                   <HourlyProductionCharts
                     production={chartData}
-                    key={windowWidth} // Re-render chart on resize
+                    key={windowWidth}
                   />
                 ) : (
                   <Typography variant="body1">
@@ -134,8 +101,6 @@ const ChartPage = () => {
           </Grid>
         </Grid>
       </Box>
-
-      {/* Styles for Calendar */}
       <style jsx>{`
         .available-date {
           background-color: #4caf50;
@@ -145,5 +110,54 @@ const ChartPage = () => {
     </LayoutOfHourlyProduction>
   );
 };
+
+export async function getServerSideProps(context) {
+  const selectedDate = context.query.date || null;
+
+  try {
+    // Fetch available dates
+    const datesResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/hourlyproduction`
+    );
+    if (!datesResponse.ok) {
+      throw new Error("Failed to fetch available dates.");
+    }
+    const availableDatesData = await datesResponse.json();
+    const availableDates = availableDatesData.map((item) =>
+      new Date(item.date).toLocaleDateString("en-CA")
+    );
+
+    // Fetch initial chart data if a date is selected
+    let initialChartData = null;
+    if (selectedDate) {
+      const chartResponse = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_BASE_URL
+        }/api/hourlyproduction?dates=${JSON.stringify([selectedDate])}`
+      );
+      if (chartResponse.ok) {
+        const chartData = await chartResponse.json();
+        initialChartData = chartData[0] || null;
+      }
+    }
+
+    return {
+      props: {
+        availableDates,
+        initialChartData,
+        initialSelectedDate: selectedDate || null,
+      },
+    };
+  } catch (error) {
+    console.error("Error in getServerSideProps:", error);
+    return {
+      props: {
+        availableDates: [],
+        initialChartData: null,
+        initialSelectedDate: null,
+      },
+    };
+  }
+}
 
 export default ChartPage;

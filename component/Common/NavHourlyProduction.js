@@ -33,7 +33,10 @@ const addDataItems = [
     label: "Add Hourly Production",
     path: "/hourlyproduction/hourlyproductionpage",
   },
-  { label: "Update Production Data", path: "/updatehourlyproduction" },
+  {
+    label: "Update Production Data",
+    path: "/hourlyproduction/update-hourly-production/",
+  },
   { label: "Add BackDate Data", path: "/addbackdatedhourlyproduction" },
 ];
 

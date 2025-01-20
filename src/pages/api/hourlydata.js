@@ -1,5 +1,5 @@
 import dbConnect from "../../../lib/dbConnect";
-import HourlyProduction from "../api/model/HourlyProductionModel";
+import HourlyProduction from "./model/HourlyProductionModel";
 
 export default async function handler(req, res) {
   await dbConnect();

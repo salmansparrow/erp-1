@@ -1,0 +1,29 @@
+.custom-toast {
+  top: 50% !important; /* Vertically center */
+  left: 50% !important; /* Horizontally center */
+  transform: translate(
+    /* -50%, */ -50%
+  ) !important; /* Adjust for perfect centering */
+  position: fixed !important; /* Ensure fixed position */
+  z-index: 9999 !important; /* Keep on top */
+  background-color: #4caf50 !important; /* Green for success */
+  color: white !important;
+  padding: 16px !important;
+  border-radius: 8px !important;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.custom-toast-error {
+  top: 50% !important; /* Vertically center */
+  left: 50% !important; /* Horizontally center */
+  transform: translate(
+    /* -50%, */ -50%
+  ) !important; /* Adjust for perfect centering */
+  position: fixed !important; /* Ensure fixed position */
+  z-index: 9999 !important; /* Keep on top */
+  background-color: red !important; /* Green for success */
+  color: white !important;
+  padding: 16px !important;
+  border-radius: 8px !important;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1) !important;
+}

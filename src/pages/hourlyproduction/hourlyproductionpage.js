@@ -3,7 +3,8 @@ import { Box, Typography } from "@mui/material";
 import LineDataForm from "../../../component/HourlyProduction/LineDataForm";
 import HourlyDataForm from "../../../component/HourlyProduction/HourlyDataForm";
 import LayoutOfHourlyProduction from "../../../component/Layout/Layout";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const HourlyProductionPage = () => {
   const [lines, setLines] = useState(
     Array.from({ length: 3 }, () => ({
@@ -73,7 +74,16 @@ const HourlyProductionPage = () => {
       (line) => line.lineNumber && line.articleName
     );
     if (linesToSave.length === 0) {
-      alert("Please fill in at least one valid line of data.");
+      toast.error("Please fill in at least one valid line of data.", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        className: "custom-toast-error",
+      });
 
       return;
     }
@@ -91,7 +101,16 @@ const HourlyProductionPage = () => {
         body: JSON.stringify(payload),
       });
       if (response.ok) {
-        alert("Line Data saved Successfully!");
+        toast.success("Line Data saved Successfully!", {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          className: "custom-toast",
+        });
         setLines((prevLines) =>
           prevLines.map((line) => ({
             ...line,
@@ -100,7 +119,16 @@ const HourlyProductionPage = () => {
         );
       } else {
         const errorData = await response.json();
-        alert(`Failed to save line data: ${errorData.message}`);
+        toast.error(`Failed to save line data: ${errorData.message}`, {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          className: "custom-toast-error",
+        });
       }
     } catch (error) {
       alert("An error occrred while saving line data");
@@ -129,7 +157,17 @@ const HourlyProductionPage = () => {
         body: JSON.stringify({ hourlyData: hourlyDataToSave }),
       });
       if (response.ok) {
-        alert("Hourly Data Saved Successfully!");
+        toast.success("Hourly Data Saved Successfully!", {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          className: "custom-toast",
+        });
+
         setLines((prevLines) =>
           prevLines.map((line) => {
             line.hourlyData[hourIndex].isSaved = true;
@@ -138,7 +176,16 @@ const HourlyProductionPage = () => {
         );
       } else {
         const errorData = await response.json();
-        alert(`Failed to Save Hourly Data: ${errorData.message}`);
+        toast.error(`Failed to Save Hourly Data: ${errorData.message}`, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          className: "custom-toast-error",
+        });
       }
     } catch (error) {
       alert("An error occurred while saving hourly data.");
@@ -199,6 +246,7 @@ const HourlyProductionPage = () => {
           handleSaveHourlyData={handleSaveHourlyData}
         />
       </Box>
+      <ToastContainer />
     </LayoutOfHourlyProduction>
   );
 };

@@ -1,5 +1,5 @@
-import HourlyProductionForm from "../../component/HourlyProduction/HourlyProductionForm";
-import LayoutOfHourlyProduction from "../../component/Layout/Layout";
+import HourlyProductionForm from "../../../component/HourlyProduction/HourlyProductionForm";
+import LayoutOfHourlyProduction from "../../../component/Layout/Layout";
 
 function hourlyproductionPage() {
   return (
