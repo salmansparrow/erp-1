@@ -4,6 +4,7 @@ import LayoutOfHourlyProduction from "../../component/Layout/Layout";
 import { Box, Typography, Grid, Paper } from "@mui/material";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import { fetchData } from "../../utils/fetch";
 
 const ChartPage = ({
   availableDates = [],
@@ -115,15 +116,8 @@ export async function getServerSideProps(context) {
   const selectedDate = context.query.date || null;
 
   try {
-    // Fetch available dates directly from the API
-    const datesResponse = await fetch(
-      "https://erp-1-tau.vercel.app/api/hourlyproduction"
-    );
-    if (!datesResponse.ok) {
-      throw new Error("Failed to fetch available dates.");
-    }
-
-    const availableDatesData = await datesResponse.json();
+    // Fetch available dates
+    const availableDatesData = await fetchData("/api/hourlyproduction");
     const availableDates = availableDatesData.map((item) =>
       new Date(item.date).toLocaleDateString("en-CA")
     );
@@ -131,15 +125,12 @@ export async function getServerSideProps(context) {
     // Fetch initial chart data if a date is selected
     let initialChartData = null;
     if (selectedDate) {
-      const chartResponse = await fetch(
-        `https://erp-1-tau.vercel.app/api/hourlyproduction?dates=${JSON.stringify(
-          [selectedDate]
-        )}`
-      );
-      if (chartResponse.ok) {
-        const chartData = await chartResponse.json();
-        initialChartData = chartData[0] || null;
-      }
+      const chartData = await fetchData("/api/hourlyproduction", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dates: [selectedDate] }),
+      });
+      initialChartData = chartData[0] || null;
     }
 
     return {
