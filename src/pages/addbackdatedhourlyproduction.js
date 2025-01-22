@@ -1,15 +1,220 @@
-import React from "react";
+import React, { useState } from "react";
+import { Box, Typography } from "@mui/material";
+import BackdatedLineDataForm from "../../component/HourlyProduction/BackdatedLineDataForm";
+import BackdatedHourlyDataForm from "../../component/HourlyProduction/BackdatedHourlyDataForm";
 import LayoutOfHourlyProduction from "../../component/Layout/Layout";
-import AddBackdatedHourlyProductionForm from "../../component/HourlyProduction/AddBackdatedHourlyProductionForm";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-function AddBackdatedHourlyProduction() {
-  return (
-    <>
-      <LayoutOfHourlyProduction>
-        <AddBackdatedHourlyProductionForm />
-      </LayoutOfHourlyProduction>
-    </>
+const BackdatedHourlyProductionPage = () => {
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [lines, setLines] = useState(
+    Array.from({ length: 3 }, () => ({
+      lineNumber: "",
+      articleName: "",
+      SAM: "",
+      operator: "",
+      helper: "",
+      shiftTime: 480,
+      target100: "",
+      target75: "",
+      targetPerHour: "",
+      isLineSaved: false,
+      hourlyData: Array.from({ length: 8 }, () => ({
+        pieces: "",
+        efficiency: "",
+        isSaved: false,
+      })),
+    }))
   );
-}
 
-export default AddBackdatedHourlyProduction;
+  const handleLineChange = (index, field, value) => {
+    const updatedLines = [...lines];
+    updatedLines[index][field] = value;
+
+    if (["SAM", "operator", "helper"].includes(field)) {
+      const SAM = parseFloat(updatedLines[index].SAM) || 0;
+      const operator = parseInt(updatedLines[index].operator) || 0;
+      const helper = parseInt(updatedLines[index].helper) || 0;
+
+      if (SAM > 0) {
+        const shiftTime = 480; // 8 hours shift
+        const target100 = (shiftTime * (operator + helper)) / SAM;
+        const target75 = target100 * 0.75;
+        const targetPerHour = target75 / 8;
+
+        updatedLines[index].target100 = target100.toFixed(2);
+        updatedLines[index].target75 = target75.toFixed(2);
+        updatedLines[index].targetPerHour = targetPerHour.toFixed(2);
+      } else {
+        updatedLines[index].target100 = "";
+        updatedLines[index].target75 = "";
+        updatedLines[index].targetPerHour = "";
+      }
+    }
+
+    setLines(updatedLines);
+  };
+
+  const handleHourlyChange = (lineIndex, hourIndex, value) => {
+    const updatedLines = [...lines];
+    const pieces = parseFloat(value) || 0;
+    const SAM = parseFloat(updatedLines[lineIndex].SAM) || 0;
+    const operator = parseInt(updatedLines[lineIndex].operator) || 0;
+    const helper = parseInt(updatedLines[lineIndex].helper) || 0;
+
+    const em = SAM * pieces;
+    const am = (operator + helper) * 60;
+    const efficiency = am > 0 ? Math.round((em / am) * 100) : 0;
+
+    updatedLines[lineIndex].hourlyData[hourIndex] = { pieces, efficiency };
+    setLines(updatedLines);
+  };
+
+  const handleSaveLines = async () => {
+    if (!selectedDate) {
+      toast.error("Please select a date for backdated data entry.", {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    const linesToSave = lines.filter(
+      (line) => line.lineNumber && line.articleName
+    );
+    if (linesToSave.length === 0) {
+      toast.error("Please fill in at least one valid line of data.", {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    const payload = {
+      date: selectedDate.format("YYYY-MM-DD"),
+      lines: linesToSave.map((line) => ({
+        ...line,
+        hourlyData: [],
+      })),
+    };
+
+    try {
+      const response = await fetch("/api/backdate/backdatedlines", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        toast.success("Backdated Line Data saved successfully!", {
+          position: "top-center",
+          autoClose: 3000,
+        });
+        setLines((prevLines) =>
+          prevLines.map((line) => ({
+            ...line,
+            isLineSaved: true,
+          }))
+        );
+      } else {
+        const errorData = await response.json();
+        toast.error(`Failed to save line data: ${errorData.message}`, {
+          position: "top-center",
+          autoClose: 3000,
+        });
+      }
+    } catch (error) {
+      toast.error("An error occurred while saving line data.", {
+        position: "top-center",
+        autoClose: 3000,
+      });
+    }
+  };
+
+  const handleSaveHourlyData = async (hourIndex) => {
+    const hourlyDataToSave = lines.map((line) => ({
+      lineNumber: line.lineNumber,
+      hourIndex,
+      data: {
+        pieces: line.hourlyData[hourIndex]?.pieces,
+        em:
+          parseFloat(line.SAM) *
+            parseFloat(line.hourlyData[hourIndex]?.pieces) || 0,
+        am: (parseInt(line.operator) + parseInt(line.helper)) * 60 || 0,
+        efficiency: line.hourlyData[hourIndex]?.efficiency,
+      },
+    }));
+
+    try {
+      const response = await fetch("/api/backdate/backdatedhourlydata", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: selectedDate.format("YYYY-MM-DD"),
+          hourlyData: hourlyDataToSave,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Hourly Data saved successfully!", {
+          position: "top-center",
+          autoClose: 3000,
+        });
+
+        setLines((prevLines) =>
+          prevLines.map((line) => {
+            line.hourlyData[hourIndex].isSaved = true;
+            return line;
+          })
+        );
+      } else {
+        const errorData = await response.json();
+        toast.error(`Failed to save hourly data: ${errorData.message}`, {
+          position: "top-center",
+          autoClose: 3000,
+        });
+      }
+    } catch (error) {
+      toast.error("An error occurred while saving hourly data.", {
+        position: "top-center",
+        autoClose: 3000,
+      });
+    }
+  };
+
+  return (
+    <LayoutOfHourlyProduction>
+      <Box sx={{ padding: { xs: 2, md: 5 }, position: "relative", top: 50 }}>
+        <Typography
+          variant="h4"
+          textAlign="center"
+          gutterBottom
+          sx={{
+            fontSize: {
+              xs: "1rem",
+              md: "1.5rem",
+            },
+          }}
+        >
+          Backdated Hourly Production Management
+        </Typography>
+        <BackdatedLineDataForm
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          lines={lines}
+          handleLineChange={handleLineChange}
+          handleSaveLines={handleSaveLines}
+        />
+        <BackdatedHourlyDataForm
+          lines={lines}
+          handleHourlyChange={handleHourlyChange}
+          handleSaveHourlyData={handleSaveHourlyData}
+        />
+      </Box>
+      <ToastContainer />
+    </LayoutOfHourlyProduction>
+  );
+};
+
+export default BackdatedHourlyProductionPage;
