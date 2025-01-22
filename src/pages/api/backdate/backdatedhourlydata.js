@@ -1,19 +1,23 @@
-import dbConnect from "../../../lib/dbConnect";
-import HourlyProduction from "./model/HourlyProductionModel";
+import dbConnect from "../../../../lib/dbConnect";
+import HourlyProduction from "../model/HourlyProductionModel";
 
 export default async function handler(req, res) {
   await dbConnect();
 
   if (req.method === "POST") {
-    const { hourlyData, entryDate } = req.body; // Include entryDate for backdated data
+    const { hourlyData, date } = req.body;
+
+    // Validate payload
+    if (!date) {
+      return res.status(400).json({ message: "Date is required." });
+    }
     if (!hourlyData || !Array.isArray(hourlyData)) {
       return res
         .status(400)
-        .json({ message: "Hourly data should be an array" });
+        .json({ message: "Hourly data should be an array." });
     }
 
     try {
-      const date = entryDate || new Date().toISOString().split("T")[0]; // Use entryDate if provided, otherwise default to today's date
       const production = await HourlyProduction.findOne({ date });
 
       if (!production) {
@@ -22,26 +26,23 @@ export default async function handler(req, res) {
         });
       }
 
-      // Process each line's hourly data
+      // Update hourly data
       hourlyData.forEach(({ lineNumber, hourIndex, data }) => {
         const lineIndex = production.lines.findIndex(
           (line) => line.lineNumber === lineNumber
         );
 
         if (lineIndex === -1) {
-          throw new Error(`Line ${lineNumber} not found in production record`);
+          throw new Error(`Line ${lineNumber} not found in production record.`);
         }
 
-        const updatedHourlyData = production.lines[lineIndex].hourlyData || [];
-        updatedHourlyData[hourIndex] = {
+        production.lines[lineIndex].hourlyData[hourIndex] = {
           ...data,
-          hour: `${hourIndex + 8}-${hourIndex + 9}`, // e.g., 8-9
+          hour: `${hourIndex + 8}-${hourIndex + 9}`,
         };
-
-        production.lines[lineIndex].hourlyData = updatedHourlyData;
       });
 
-      // Save updated production document
+      // Save changes
       production.updatedAt = new Date();
       await production.save();
 
@@ -58,6 +59,6 @@ export default async function handler(req, res) {
     res.setHeader("Allow", ["POST"]);
     return res
       .status(405)
-      .json({ message: `Method ${req.method} not allowed` });
+      .json({ message: `Method ${req.method} not allowed.` });
   }
 }

@@ -153,7 +153,7 @@ const LandingPage = () => {
               title: "Adding Data",
               description:
                 "Gain actionable insights with data-driven dashboards.",
-              link: "/hourlyproduction",
+              link: "/hourlyproduction/hourlyproductionpage",
             },
             {
               icon: featureIcon3,
