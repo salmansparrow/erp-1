@@ -1,7 +1,7 @@
 import User from "../../../../src/model/user.js";
 import dbConnect from "../../../../lib/dbConnect";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+
 
 export default async function handler(req, res) {
     if (req.method === "POST") {
@@ -10,10 +10,10 @@ export default async function handler(req, res) {
             await dbConnect();
 
 
-            const { name, email, password } = req.body;
+            const { name, email, password , role } = req.body;
 
 
-            if (!name || !email || !password) {
+            if (!name || !email || !password  || !role ) {
                 return res.status(400).json({ message: "All fields are required" });
             }
 
@@ -31,11 +31,12 @@ export default async function handler(req, res) {
                 name,
                 email,
                 password: hashedPassword,
+                role 
             });
 
             await newUser.save();
 
-          return   res.status(201).json({ message: "User created successfully",  newUser , token });
+          return   res.status(201).json({ message: "User created successfully",  newUser });
 
         } catch (error) {
             console.error("Signup error:", error);
