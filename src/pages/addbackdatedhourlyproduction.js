@@ -28,6 +28,40 @@ const BackdatedHourlyProductionPage = () => {
     }))
   );
 
+  const handleDateChange = (date) => {
+    // Format the date and set it to `selectedDate`
+
+    const formattedDate = date.format("YYYY-MM-DD");
+    setSelectedDate(formattedDate);
+
+    // Reset all fields when date changes
+    setLines(
+      Array.from({ length: 3 }, () => ({
+        lineNumber: "",
+        articleName: "",
+        SAM: "",
+        operator: "",
+        helper: "",
+        shiftTime: 480,
+        target100: "",
+        target75: "",
+        targetPerHour: "",
+        isLineSaved: false,
+        hourlyData: Array.from({ length: 8 }, () => ({
+          pieces: "",
+          efficiency: "",
+          isSaved: false,
+        })),
+      }))
+    );
+
+    // Optionally clear any errors or previous state related to the old date
+    toast.info("Fields reset for the selected date.", {
+      position: "top-center",
+      autoClose: 2000,
+    });
+  };
+
   const handleLineChange = (index, field, value) => {
     const updatedLines = [...lines];
     updatedLines[index][field] = value;
@@ -164,7 +198,7 @@ const BackdatedHourlyProductionPage = () => {
 
         setLines((prevLines) =>
           prevLines.map((line) => {
-            line.hourlyData[hourIndex].isSaved = true;
+            line.hourlyData[hourIndex].isSaved = true; // Mark as saved
             return line;
           })
         );
@@ -180,6 +214,32 @@ const BackdatedHourlyProductionPage = () => {
         position: "top-center",
         autoClose: 3000,
       });
+    }
+  };
+
+  const handleFetchPreviousData = async () => {
+    // Logic for fetching previous data
+    try {
+      const response = await fetch("/api/hourlyproduction/previous");
+      if (!response.ok) {
+        const error = response.json();
+        alert(`Failed to fetch previous data: ${error.message}`);
+        return;
+      }
+      const previousData = await response.json();
+      // Populate the form with the fetched data
+      setLines(
+        previousData.lines.map((line) => ({
+          ...line,
+          isLineSaved: false, // Allow modifications
+          hourlyData: Array.from({ length: 8 }, () => ({
+            pieces: "",
+            efficiency: "",
+          })),
+        }))
+      );
+    } catch (error) {
+      alert("An error occurred while fetching previous data.");
     }
   };
 
@@ -205,6 +265,7 @@ const BackdatedHourlyProductionPage = () => {
           lines={lines}
           handleLineChange={handleLineChange}
           handleSaveLines={handleSaveLines}
+          handleFetchPreviousData={handleFetchPreviousData}
         />
         <BackdatedHourlyDataForm
           lines={lines}

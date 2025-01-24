@@ -47,6 +47,7 @@ const BackdatedHourlyDataForm = ({
                       fullWidth
                       size="small"
                       type="number"
+                      disabled={line.hourlyData[hourIndex]?.isSaved} // Check isSaved correctly
                     />
                   </TableCell>
                   <TableCell>
@@ -58,6 +59,9 @@ const BackdatedHourlyDataForm = ({
                 <Button
                   variant="contained"
                   onClick={() => handleSaveHourlyData(hourIndex)}
+                  disabled={lines.every(
+                    (line) => line.hourlyData[hourIndex]?.isSaved
+                  )} // Disable Save button if all lines for this hour are saved
                 >
                   Save
                 </Button>

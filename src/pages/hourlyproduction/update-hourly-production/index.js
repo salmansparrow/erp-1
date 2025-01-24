@@ -23,14 +23,17 @@ const UpdateHourlyProductionWithCalendar = () => {
   const fetchProductionData = async (date) => {
     setLoading(true);
     setError(null);
+    // Reset states when fetching new data
+    setProductionData({ date, lines: [] });
+    setOtData([]); // Reset OT data
     try {
       const response = await fetch(
         `/api/hourlyproduction/?dates=${JSON.stringify([date])}`
       );
       if (response.status === 404) {
-        setProductionData({ date, lines: [] });
-        setError("No production data found for the selected date.");
+        setProductionData({ date, lines: [] }); // No production data for this date
         setOtData([]);
+        setError("No production data found for the selected date.");
         return;
       }
       if (!response.ok) throw new Error("Failed to fetch production data.");
@@ -65,6 +68,10 @@ const UpdateHourlyProductionWithCalendar = () => {
   const handleDateChange = (date) => {
     const formattedDate = date.toLocaleDateString("en-CA");
     setSelectedDate(formattedDate);
+
+    // Reset states when switching dates
+    setProductionData({ date: formattedDate, lines: [] });
+    setOtData([]);
 
     // Update the URL to reflect the selected date
     router.push(
@@ -116,7 +123,19 @@ const UpdateHourlyProductionWithCalendar = () => {
       });
 
       if (response.ok) {
-        alert(`OT Data for Line ${lineIndex + 1} Saved Successfully!`);
+        toast.success(`OT Data for Line ${lineIndex + 1} Saved Successfully!`, {
+          position: "top-center",
+          autoClose: 3000,
+        });
+
+        // Clear saved OT data fields
+        setOtData((prev) =>
+          prev.map((item, idx) =>
+            idx === lineIndex
+              ? { hours: "", menPower: "", pieces: "", minutes: 0 }
+              : item
+          )
+        );
       } else {
         const errorData = await response.json();
         alert(`Failed to Save OT Data: ${errorData.message}`);
