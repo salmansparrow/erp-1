@@ -220,6 +220,7 @@ const BackdatedHourlyProductionPage = () => {
   const handleFetchPreviousData = async () => {
     // Logic for fetching previous data
     try {
+      const response = await fetch("/api/hourlyproduction/previous");
       if (!response.ok) {
         const error = response.json();
         alert(`Failed to fetch previous data: ${error.message}`);
