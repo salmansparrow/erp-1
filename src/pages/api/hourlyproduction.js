@@ -4,6 +4,8 @@ import HourlyProduction from "../api/model/HourlyProductionModel";
 export default async function handler(req, res) {
   await dbConnect();
 
+  console.log(dbConnect);
+
   try {
     if (req.method === "GET") {
       const { dates } = req.query;
