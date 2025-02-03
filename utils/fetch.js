@@ -1,5 +1,5 @@
 const BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL || "https://erp-1-tau.vercel.app/";
+  process.env.NEXT_PUBLIC_BASE_URL || "https://erp-1-tau.vercel.app";
 
 export async function fetchData(endpoint, options = {}) {
   try {
