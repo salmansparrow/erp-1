@@ -92,12 +92,17 @@ const BackdatedHourlyProductionPage = () => {
 
   const handleHourlyChange = (lineIndex, hourIndex, value) => {
     const updatedLines = [...lines];
-    const pieces = parseFloat(value) || 0;
+
+    // ✅ Allow user to input "0" correctly
+    const pieces = value === "" ? "" : value;
+
+    // const pieces = parseFloat(value) || 0;
     const SAM = parseFloat(updatedLines[lineIndex].SAM) || 0;
     const operator = parseInt(updatedLines[lineIndex].operator) || 0;
     const helper = parseInt(updatedLines[lineIndex].helper) || 0;
 
-    const em = SAM * pieces;
+    // const em = SAM * pieces;
+    const em = SAM * (parseFloat(value) || 0); // "0" should work fine now
     const am = (operator + helper) * 60;
     const efficiency = am > 0 ? Math.round((em / am) * 100) : 0;
 

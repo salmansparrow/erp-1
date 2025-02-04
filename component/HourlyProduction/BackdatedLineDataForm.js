@@ -14,6 +14,9 @@ import { DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
+import { useRouter } from "next/router";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const BackdatedLineDataForm = ({
   selectedDate,
@@ -23,7 +26,8 @@ const BackdatedLineDataForm = ({
   handleSaveLines,
   handleFetchPreviousData,
 }) => {
-  const [disabledDates, setDisabledDates] = useState();
+  const [disabledDates, setDisabledDates] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchDisabledDates = async () => {
@@ -52,8 +56,46 @@ const BackdatedLineDataForm = ({
       alert("This date already has data. Please select another date.");
       return;
     }
+
+    // Format the newDate before setting it to state
+    const formattedDate = newDate.format("YYYY-MM-DD");
+
     setSelectedDate(newDate);
+    router.push(
+      {
+        pathname: router.pathname,
+        query: {
+          date: formattedDate,
+        },
+      },
+      undefined,
+      { shallow: true }
+    );
   };
+
+  useEffect(() => {
+    if (router.query.date) {
+      const formattedDate = dayjs(router.query.date);
+
+      if (formattedDate.isValid()) {
+        if (isDateDisabled(formattedDate)) {
+          // If the date already has data, alert the user and redirect
+          toast.error(
+            "This date already has data. Please select another date.",
+            {
+              position: "top-center",
+              autoClose: 2000,
+            }
+          );
+          router.push("/addbackdatedhourlyproduction"); // Redirect to the default page or any other page
+        } else {
+          setSelectedDate(formattedDate); // Set the selected date if it's valid and not disabled
+        }
+      } else {
+        setSelectedDate(null); // Handle invalid date case
+      }
+    }
+  }, [router.query.date, disabledDates]);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -74,9 +116,12 @@ const BackdatedLineDataForm = ({
             onChange={handleDateChange}
             disableFuture
             shouldDisableDate={(date) => isDateDisabled(dayjs(date))}
-            renderInput={(params) => (
-              <TextField {...params} fullWidth size="small" />
-            )}
+            slotProps={{
+              textField: {
+                fullWidth: false,
+                size: "small",
+              },
+            }}
           />
         </Paper>
         <Box sx={{ marginBottom: 4, textAlign: "right" }}>
