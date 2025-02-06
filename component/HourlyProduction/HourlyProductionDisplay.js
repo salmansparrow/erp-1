@@ -117,6 +117,22 @@ const HourlyProductionDisplay = () => {
                       value =
                         (line.operator + line.helper) * line.shiftTime || 0;
                     }
+
+                    // Fetch OT Data
+
+                    if (field.key === "otPieces") {
+                      value = line.otData?.otPieces || 0;
+                    }
+                    if (field.key === "otHours") {
+                      value = line.otData?.otHours || 0;
+                    }
+                    if (field.key === "otMenPower") {
+                      value = line.otData?.otMenPower || 0;
+                    }
+                    if (field.key === "otMinutes") {
+                      value = line.otData?.otMinutes || 0;
+                    }
+
                     return (
                       <TableCell
                         key={lineIdx}

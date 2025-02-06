@@ -26,6 +26,18 @@ export const calculateTotals = (hourlyData = []) => {
   return { totalPieces, avgEfficiency };
 };
 
+export const calculateShiftMinutes = (shiftTime, operator, helper) => {
+  return shiftTime * (operator + helper);
+};
+
+export const calculateTotalAvailableMinutes = (shiftMinutes, otMinutes) => {
+  return shiftMinutes + otMinutes;
+};
+
+export const calculateEarnedMinutes = (SAM, totalLinePieces, otPieces) => {
+  return SAM * (totalLinePieces + otPieces);
+};
+
 export const tableHeaders = [
   { label: "Article", key: "articleName" },
   { label: "SAM", key: "SAM" },
@@ -36,4 +48,11 @@ export const tableHeaders = [
   { label: "Target 100%", key: "target100" },
   { label: "Target 75%", key: "target75" },
   { label: "Target / Hour", key: "targetPerHour" },
+  { label: "O.T Pieces", key: "otPieces" }, // Add OT fields
+  { label: "O.T Hours", key: "otHours" },
+  { label: "O.T MenPower", key: "otMenPower" },
+  { label: "O.T Minutes", key: "otMinutes" },
+  { label: "Shift Minutes", key: "shiftMinutes" },
+  { label: "Total Available Minutes", key: "totalAvailableMinutes" },
+  { label: "Earned Minutes", key: "earnedMinutes" },
 ];
