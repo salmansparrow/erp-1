@@ -1,4 +1,4 @@
-import User from "../../../../src/model/user.js";
+import User from "../model/User.js";
 import dbConnect from "../../../../lib/dbConnect";
 import bcrypt from "bcrypt";
 

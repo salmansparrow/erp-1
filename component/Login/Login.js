@@ -69,7 +69,7 @@ function LoginComponent({ formData, setFormData, handleLogin }) {
               }}
               onClick={handleLogin}
             >
-              Create User
+              Login
             </Button>
           </Grid>
         </Grid>

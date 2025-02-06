@@ -1,49 +1,62 @@
-import User from "../../../../src/model/user.js";
+import User from "../model/User.js";
 import dbConnect from "../../../../lib/dbConnect.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+import * as cookie from "cookie";
+
 export default async function handler(req, res) {
-  if (req.method === "POST") {
-    try {
-      await dbConnect();
-
-      const { email, password } = req.body;
-
-      if (!email || !password) {
-        return res
-          .status(400)
-          .json({ message: "Email and password are required" });
-      }
-
-      const user = await User.findOne({ email });
-
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      console.log(user.role);
-
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      const token = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "1d",
-        }
-      );
-
-      return res.status(200).json({ message: "Login successful", token });
-    } catch (error) {
-      console.error("Login error:", error);
-      return res
-        .status(500)
-        .json({ message: "Something went wrong. Please try again." });
-    }
-  } else {
+  if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  try {
+    await dbConnect();
+
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user || !user.password) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    // Set HTTP-only cookie
+    res.setHeader(
+      "Set-Cookie",
+      cookie.serialize("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // Secure in production
+        sameSite: "Strict",
+        path: "/",
+      })
+    );
+
+    return res
+      .status(200)
+      .json({ message: "Login successful", role: user.role });
+  } catch (error) {
+    console.error("Login error:", error);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 }

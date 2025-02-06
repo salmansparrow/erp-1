@@ -77,22 +77,22 @@ const BackdatedLineDataForm = ({
     if (router.query.date) {
       const formattedDate = dayjs(router.query.date);
 
-      if (formattedDate.isValid()) {
-        if (isDateDisabled(formattedDate)) {
-          // If the date already has data, alert the user and redirect
-          toast.error(
-            "This date already has data. Please select another date.",
-            {
-              position: "top-center",
-              autoClose: 2000,
-            }
-          );
-          router.push("/addbackdatedhourlyproduction"); // Redirect to the default page or any other page
-        } else {
-          setSelectedDate(formattedDate); // Set the selected date if it's valid and not disabled
-        }
+      if (!formattedDate.isValid()) {
+        // Handle invalid date case
+        toast.error("Invalid date format. Redirecting...", {
+          position: "top-center",
+          autoClose: 2000,
+        });
+        router.push("/addbackdatedhourlyproduction"); // Redirect to the default page or any other page
+      } else if (isDateDisabled(formattedDate)) {
+        // If the date already has data, alert the user and redirect
+        toast.error("This date already has data. Please select another date.", {
+          position: "top-center",
+          autoClose: 2000,
+        });
+        router.push("/addbackdatedhourlyproduction"); // Redirect to the default page or any other page
       } else {
-        setSelectedDate(null); // Handle invalid date case
+        setSelectedDate(formattedDate); // Set the selected date if it's valid and not disabled
       }
     }
   }, [router.query.date, disabledDates]);

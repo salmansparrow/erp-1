@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 
-const roles = ["Admin", "Teacher", "Student"]; // Example roles
+const roles = ["Admin", "User"]; // Example roles
 
 function CreateUserComponent({ formData, setFormData, handleCreateUser }) {
   const handleChange = (field, value) => {

@@ -69,6 +69,14 @@ function NavHourlyProduction(props) {
     setAnchorElAddData(null);
   };
 
+  const handleLogout = async () => {
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+
+    await fetch("/api/LoginSystem/Logout", { method: "GET" });
+    router.push("/login");
+  };
+
   const isActive = (path) => router.pathname === path;
 
   const drawer = (
@@ -113,6 +121,17 @@ function NavHourlyProduction(props) {
           </ListItemButton>
         </ListItem>
       </List>
+
+      <Button
+        variant="contained"
+        color="warning"
+        onClick={handleLogout}
+        sx={{
+          ml: 3,
+        }}
+      >
+        Sign Out
+      </Button>
     </Box>
   );
 
@@ -236,6 +255,18 @@ function NavHourlyProduction(props) {
                 </MenuItem>
               ))}
             </Menu>
+
+            <Button
+              variant="contained"
+              color="warning"
+              sx={{
+                color: "black",
+                ml: 3, // Adds margin to the left to push it towards the right
+              }}
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
           </Box>
         </Toolbar>
       </AppBar>
