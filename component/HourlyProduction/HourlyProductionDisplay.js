@@ -113,23 +113,35 @@ const HourlyProductionDisplay = () => {
                   </TableCell>
                   {selectedProduction.lines.map((line, lineIdx) => {
                     let value = line[field.key] || 0;
-                    if (field.key === "availableMinutes") {
-                      value =
-                        (line.operator + line.helper) * line.shiftTime || 0;
+
+                    // Shift Minutes Calculation
+                    if (field.key === "shiftMinutes") {
+                      value = (line.operator + line.helper) * line.shiftTime;
                     }
 
-                    // Fetch OT Data
+                    // Total Available Minutes = Shift Minutes + OT Minutes
+                    else if (field.key === "totalAvailableMinutes") {
+                      const shiftMinutes =
+                        (line.operator + line.helper) * line.shiftTime;
+                      const otMinutes = line.otData?.otMinutes || 0;
+                      value = shiftMinutes + otMinutes;
+                    }
 
-                    if (field.key === "otPieces") {
+                    // Earned Minutes = SAM * (Total Pieces + OT Pieces)
+                    else if (field.key === "earnedMinutes") {
+                      const { totalPieces } = calculateTotals(line.hourlyData);
+                      const otPieces = line.otData?.otPieces || 0;
+                      value = line.SAM * (totalPieces + otPieces);
+                    }
+
+                    // OT Data Handling
+                    else if (field.key === "otPieces") {
                       value = line.otData?.otPieces || 0;
-                    }
-                    if (field.key === "otHours") {
+                    } else if (field.key === "otHours") {
                       value = line.otData?.otHours || 0;
-                    }
-                    if (field.key === "otMenPower") {
+                    } else if (field.key === "otMenPower") {
                       value = line.otData?.otMenPower || 0;
-                    }
-                    if (field.key === "otMinutes") {
+                    } else if (field.key === "otMinutes") {
                       value = line.otData?.otMinutes || 0;
                     }
 
@@ -139,7 +151,9 @@ const HourlyProductionDisplay = () => {
                         colSpan={2}
                         sx={{ border: "1px solid black", textAlign: "center" }}
                       >
-                        {value}
+                        {field.key === "earnedMinutes"
+                          ? value.toFixed(2) // Earned Minutes ko 2 decimal places mein show karein
+                          : value}
                       </TableCell>
                     );
                   })}
@@ -187,9 +201,12 @@ const HourlyProductionDisplay = () => {
                   Totals
                 </TableCell>
                 {selectedProduction.lines.map((line, lineIdx) => {
-                  const { totalPieces, avgEfficiency } = calculateTotals(
-                    line.hourlyData
-                  );
+                  const { totalPieces } = calculateTotals(line.hourlyData);
+
+                  const target100 = line.target100;
+                  const avgEfficiency =
+                    target100 > 0 ? (totalPieces / target100) * 100 : 0;
+
                   return (
                     <React.Fragment key={lineIdx}>
                       <TableCell
@@ -208,7 +225,7 @@ const HourlyProductionDisplay = () => {
                           fontWeight: "bold",
                         }}
                       >
-                        {avgEfficiency}%
+                        {avgEfficiency.toFixed(2)}%
                       </TableCell>
                     </React.Fragment>
                   );
@@ -274,6 +291,7 @@ const HourlyProductionDisplay = () => {
                 </TableCell>
                 {selectedProduction.lines.map((line, lineIdx) => {
                   const { totalPieces } = calculateTotals(line.hourlyData);
+
                   const otPieces = line.otData?.otPieces || 0;
                   const grandTotalPieces = totalPieces + otPieces;
 
@@ -283,8 +301,17 @@ const HourlyProductionDisplay = () => {
                     (line.operator + line.helper) * line.shiftTime;
                   const otMinutes = line.otData?.otMinutes || 0;
                   const AM = availableMinutes + otMinutes;
+
+                  const shiftMinutes =
+                    (line.operator + line.helper) * line.shiftTime;
+                  const totalAvailableMinutes = shiftMinutes + otMinutes;
+                  const earnedMinutes = SAM * (totalPieces + otPieces);
+
+                  // Ensure totalAvailableMinutes is not zero
                   const grandEfficiency =
-                    AM > 0 ? ((EM / AM) * 100).toFixed(2) : 0;
+                    totalAvailableMinutes > 0
+                      ? (earnedMinutes / totalAvailableMinutes) * 100
+                      : 0;
 
                   return (
                     <React.Fragment key={lineIdx}>
@@ -306,7 +333,7 @@ const HourlyProductionDisplay = () => {
                           backgroundColor: "#f0f8ff",
                         }}
                       >
-                        {grandEfficiency}%
+                        {grandEfficiency.toFixed(2)}%
                       </TableCell>
                     </React.Fragment>
                   );

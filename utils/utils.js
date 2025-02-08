@@ -10,7 +10,7 @@ export const generateHours = () => {
   return hours;
 };
 
-export const calculateTotals = (hourlyData = []) => {
+export const calculateTotals = (hourlyData = [], line = []) => {
   const totalPieces = hourlyData.reduce(
     (sum, hour) => sum + (hour?.pieces || 0),
     0
@@ -19,11 +19,8 @@ export const calculateTotals = (hourlyData = []) => {
     (sum, hour) => sum + (hour?.efficiency || 0),
     0
   );
-  const avgEfficiency =
-    hourlyData.length > 0
-      ? (totalEfficiency / hourlyData.length).toFixed(2)
-      : 0;
-  return { totalPieces, avgEfficiency };
+
+  return { totalPieces };
 };
 
 export const calculateShiftMinutes = (shiftTime, operator, helper) => {

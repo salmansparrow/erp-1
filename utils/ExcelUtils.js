@@ -89,14 +89,13 @@ export const handleDownloadExcel = (selectedProduction) => {
     ["Hours", "Output", "Effi %", "Output", "Effi %", "Output", "Effi %"],
   ];
 
-  // Add hourly data
+  // Add hourly data (without break time)
   const hours = [
     "9:00 AM",
     "10:00 AM",
     "11:00 AM",
     "12:00 PM",
     "1:00 PM",
-    "Break",
     "3:00 PM",
     "4:00 PM",
     "5:00 PM",
@@ -113,36 +112,85 @@ export const handleDownloadExcel = (selectedProduction) => {
     data.push(row);
   });
 
-  // Add OT data
-  data.push([]);
+  // Add OT Data Section
+  data.push([], ["OT Data"]);
   data.push([
     "O.T Pieces",
-    ...selectedProduction.lines.map((line) => line.otData?.otPieces || ""),
+    ...selectedProduction.lines.map((line) => line.otData?.otPieces || 0),
   ]);
   data.push([
     "O.T Hours",
-    ...selectedProduction.lines.map((line) => line.otData?.otHours || ""),
+    ...selectedProduction.lines.map((line) => line.otData?.otHours || 0),
   ]);
   data.push([
     "O.T MenPower",
-    ...selectedProduction.lines.map((line) => line.otData?.otMenPower || ""),
+    ...selectedProduction.lines.map((line) => line.otData?.otMenPower || 0),
   ]);
   data.push([
     "O.T Minutes",
-    ...selectedProduction.lines.map((line) => line.otData?.otMinutes || ""),
+    ...selectedProduction.lines.map((line) => line.otData?.otMinutes || 0),
+  ]);
+
+  // Add Calculations Section
+  data.push([], ["Calculations"]);
+  data.push([
+    "Shift Minutes",
+    ...selectedProduction.lines.map(
+      (line) =>
+        ((line.operator || 0) + (line.helper || 0)) * (line.shiftTime || 0)
+    ),
+  ]);
+  data.push([
+    "Total Available Minutes",
+    ...selectedProduction.lines.map(
+      (line) =>
+        ((line.operator || 0) + (line.helper || 0)) * (line.shiftTime || 0) +
+        (line.otData?.otMinutes || 0)
+    ),
+  ]);
+  data.push([
+    "Earned Minutes",
+    ...selectedProduction.lines.map(
+      (line) =>
+        (line.SAM || 0) *
+        (line.hourlyData.reduce((sum, h) => sum + (h.pieces || 0), 0) +
+          (line.otData?.otPieces || 0))
+    ),
+  ]);
+  data.push([
+    "Grand Efficiency",
+    ...selectedProduction.lines.map((line, index) => {
+      const totalAvailableMinutes =
+        ((line.operator || 0) + (line.helper || 0)) * (line.shiftTime || 0) +
+        (line.otData?.otMinutes || 0);
+
+      const earnedMinutes =
+        (line.SAM || 0) *
+        (line.hourlyData.reduce((sum, h) => sum + (h.pieces || 0), 0) +
+          (line.otData?.otPieces || 0));
+
+      return totalAvailableMinutes > 0
+        ? ((earnedMinutes / totalAvailableMinutes) * 100).toFixed(2) + "%"
+        : "0%";
+    }),
   ]);
 
   // Create a new workbook and worksheet
   const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.aoa_to_sheet(data);
 
-  // Apply styling (merge cells for headers and alignment)
+  // Apply styling
   worksheet["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // Merge title row
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }, // Merge date row
-    { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } }, // Merge production column
-    { s: { r: 3, c: 2 }, e: { r: 3, c: 4 } }, // Merge day target column
-    { s: { r: 3, c: 5 }, e: { r: 3, c: 6 } }, // Merge achieved efficiency column
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },
+    { s: { r: 3, c: 2 }, e: { r: 3, c: 4 } },
+    { s: { r: 3, c: 5 }, e: { r: 3, c: 6 } },
+    // Merge OT Data header
+    {
+      s: { r: data.findIndex((row) => row[0] === "OT Data"), c: 0 },
+      e: { r: data.findIndex((row) => row[0] === "OT Data"), c: 6 },
+    },
   ];
 
   // Add worksheet to workbook

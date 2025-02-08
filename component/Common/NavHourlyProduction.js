@@ -258,7 +258,7 @@ function NavHourlyProduction(props) {
 
             <Button
               variant="contained"
-              color="warningw"
+              color="warning"
               sx={{
                 color: "black",
                 ml: 3, // Adds margin to the left to push it towards the right
