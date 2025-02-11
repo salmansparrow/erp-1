@@ -18,6 +18,7 @@ import {
   tableHeaders,
 } from "../../utils/utils";
 import { handleDownloadExcel } from "../../utils/ExcelUtils";
+import loginImage from "../../public/images/login.jpg";
 
 const HourlyProductionDisplay = () => {
   const [productions, setProductions] = useState([]);

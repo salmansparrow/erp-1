@@ -2,7 +2,6 @@ import User from "../model/User.js";
 import dbConnect from "../../../../lib/dbConnect.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
 import * as cookie from "cookie";
 
 export default async function handler(req, res) {
@@ -39,16 +38,23 @@ export default async function handler(req, res) {
       { expiresIn: "1d" }
     );
 
-    // Set HTTP-only cookie
-    res.setHeader(
-      "Set-Cookie",
+    // Set HTTP-only cookies
+    res.setHeader("Set-Cookie", [
       cookie.serialize("token", token, {
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === "production", // Secure in production
         sameSite: "Strict",
         path: "/",
-      })
-    );
+        maxAge: 60 * 60 * 24, // 1 day
+      }),
+      cookie.serialize("role", user.role, {
+        httpOnly: false, // Allow frontend to read this cookie
+        secure: process.env.NODE_ENV === "production", // Secure in production
+        sameSite: "Strict",
+        path: "/",
+        maxAge: 60 * 60 * 24, // 1 day
+      }),
+    ]);
 
     return res
       .status(200)

@@ -11,7 +11,7 @@ function LoginComponent({ formData, setFormData, handleLogin }) {
       <Box
         sx={{
           padding: 4,
-          maxWidth: 600,
+          maxWidth: 400,
           margin: "auto",
           marginBottom: 10,
           marginTop: 10,
