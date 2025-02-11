@@ -88,6 +88,14 @@ const HourlyProductionCharts = ({ production }) => {
     datasets: datasets,
   };
 
+  // Extract targetEfficiency values
+  const targetEfficiencies = production.lines.map(
+    (line) => Number(line.targetEfficiency) || 0
+  );
+
+  // Calculate benchmark dynamically (Using max value, but you can use average as well)
+  const benchmarkValue = Math.max(...targetEfficiencies);
+
   const options = {
     responsive: true,
     maintainAspectRatio: false, // Allows dynamic resizing
@@ -103,14 +111,20 @@ const HourlyProductionCharts = ({ production }) => {
         annotations: {
           benchmark: {
             type: "line",
-            yMin: 80,
-            yMax: 80,
+            yMin: benchmarkValue, // Dynamically set benchmark
+            yMax: benchmarkValue, // Same value for horizontal line
             borderColor: "red",
-            borderWidth: 2,
             label: {
-              content: "Benchmark 80%",
+              content: `Benchmark ${benchmarkValue}%`, // Show value
               enabled: true,
               position: "end",
+              backgroundColor: "rgba(255, 99, 132, 0.75)", // Red background
+              color: "white",
+              padding: 5,
+              display: true, // Ensures visibility on hover
+            },
+            hover: {
+              enabled: true, // Enable hover effect
             },
           },
         },

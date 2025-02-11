@@ -16,7 +16,8 @@ const LineDataSchema = new mongoose.Schema({
   helper: { type: Number, required: true },
   shiftTime: { type: Number, default: 480 },
   target100: { type: Number, default: 0 },
-  target75: { type: Number, default: 0 },
+  targetEfficiency: { type: Number, default: 0 },
+  target: { type: Number, default: 0 },
   targetPerHour: { type: Number, default: 0 },
   otData: {
     otHours: { type: Number, default: 0 },

@@ -4,20 +4,37 @@ import * as XLSX from "xlsx";
 export const handleDownloadExcel = (selectedProduction) => {
   if (!selectedProduction) return;
 
+  // Calculate Total Day Target (Sum of all line targets)
+  const totalDayTarget = selectedProduction.lines.reduce(
+    (sum, line) => sum + (line.target || 0),
+    0
+  );
+
+  // Calculate Total Earned Minutes (EM) & Available Minutes (AM)
+  const totalEM = selectedProduction.lines.reduce(
+    (sum, line) =>
+      sum +
+      line.hourlyData.reduce((hourSum, hour) => hourSum + (hour.em || 0), 0),
+    0
+  );
+
+  const totalAM = selectedProduction.lines.reduce(
+    (sum, line) =>
+      sum +
+      line.hourlyData.reduce((hourSum, hour) => hourSum + (hour.am || 0), 0),
+    0
+  );
+
+  // Achieved Efficiency Calculation
+  const achievedEfficiency = totalAM > 0 ? (totalEM / totalAM) * 100 : 0;
+
   // Define the data for the Excel file
   const data = [
     ["Hourly Production & Efficiency Board"], // Title row
     [`Dated : ${selectedProduction.date}`], // Date row
     [],
-    [
-      "Production / Target",
-      "",
-      "Day Target @ 80%",
-      "",
-      "",
-      "Achieved Efficiency",
-    ],
-    ["#VALUE!", "", "1208", "", "", "#VALUE!"],
+    ["Production / Target", "", "Day Target", "", "", "Achieved Efficiency"],
+    ["", "", totalDayTarget, "", "", `${achievedEfficiency.toFixed(2)}%`], // Day Target & Efficiency Row
     [],
     ["Line", "4", "", "5", "", "12"],
     [
@@ -68,14 +85,21 @@ export const handleDownloadExcel = (selectedProduction) => {
       "",
       selectedProduction.lines[2]?.target100 || "",
     ],
-    ["Target Efficiency", "80%", "", "80%", "", "80%"],
     [
-      "Target 80%",
-      selectedProduction.lines[0]?.target75 || "",
+      "Target Efficiency",
+      selectedProduction.lines[0]?.targetEfficiency || "",
       "",
-      selectedProduction.lines[1]?.target75 || "",
+      selectedProduction.lines[1]?.targetEfficiency || "",
       "",
-      selectedProduction.lines[2]?.target75 || "",
+      selectedProduction.lines[2]?.targetEfficiency || "",
+    ],
+    [
+      "Target",
+      selectedProduction.lines[0]?.target || "",
+      "",
+      selectedProduction.lines[1]?.target || "",
+      "",
+      selectedProduction.lines[2]?.target || "",
     ],
     [
       "Target / Hour",
@@ -181,11 +205,11 @@ export const handleDownloadExcel = (selectedProduction) => {
 
   // Apply styling
   worksheet["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } },
-    { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },
-    { s: { r: 3, c: 2 }, e: { r: 3, c: 4 } },
-    { s: { r: 3, c: 5 }, e: { r: 3, c: 6 } },
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // Merge Title
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }, // Merge Date
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } }, // Merge "Production / Target"
+    { s: { r: 3, c: 2 }, e: { r: 3, c: 4 } }, // Merge "Day Target"
+    { s: { r: 3, c: 5 }, e: { r: 3, c: 6 } }, // Merge "Achieved Efficiency"
     // Merge OT Data header
     {
       s: { r: data.findIndex((row) => row[0] === "OT Data"), c: 0 },

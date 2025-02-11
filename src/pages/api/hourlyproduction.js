@@ -8,6 +8,7 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
+      console.log("Full Query Params:", req.query);
       const { dates } = req.query;
 
       try {
@@ -40,6 +41,7 @@ export default async function handler(req, res) {
 
     if (req.method === "POST") {
       const { date, lines } = req.body;
+      console.log(req.body);
 
       if (!date || !lines || !Array.isArray(lines) || lines.length === 0) {
         return res.status(400).json({
@@ -50,15 +52,19 @@ export default async function handler(req, res) {
       const filteredLines = lines.map((line) => ({
         ...line,
         hourlyData: [], // Ensure hourlyData is empty
+        targetEfficiency: line.targetEfficiency || 80, // Default 80 rakhen
+        target: line.target || 0, // Target bhi save karna hai
       }));
 
       try {
         let production = await HourlyProduction.findOne({ date });
 
         if (!production) {
+          // ✅ Agar pehle se data nahi hai to naya document create karna hai
           production = new HourlyProduction({ date, lines: filteredLines });
         } else {
-          production.lines.push(...filteredLines);
+          // ✅ Agar pehle se data hai to purani lines replace karni hain
+          production.lines = filteredLines;
           production.updatedAt = new Date();
         }
 
@@ -94,6 +100,11 @@ export default async function handler(req, res) {
           );
 
           if (existingLine) {
+            // Update fields including target and targetEfficiency
+            existingLine.targetEfficiency =
+              updatedLine.targetEfficiency || existingLine.targetEfficiency;
+            existingLine.target = updatedLine.target || existingLine.target;
+
             // Update line details
             Object.assign(existingLine, updatedLine);
 

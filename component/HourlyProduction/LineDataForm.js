@@ -8,6 +8,7 @@ import {
   TableRow,
   TextField,
   Button,
+  Typography,
 } from "@mui/material";
 
 const LineDataForm = ({
@@ -54,7 +55,13 @@ const LineDataForm = ({
               { label: "Helper", key: "helper" },
               { label: "Shift Time", key: "shiftTime" },
               { label: "Target 100%", key: "target100" },
-              { label: "Target 75%", key: "target75" },
+              { label: "Target Efficiency (%)", key: "targetEfficiency" }, // ✅ Added Target Efficiency
+              {
+                label: lines.some((line) => line.targetEfficiency) // ✅ Dynamic Target Label
+                  ? `Target ${lines[0].targetEfficiency || ""}%`
+                  : "Target",
+                key: "target",
+              },
               { label: "Target/Hour", key: "targetPerHour" },
             ].map((field) => (
               <TableRow key={field.key}>
@@ -76,6 +83,33 @@ const LineDataForm = ({
                         placeholder={field.label}
                         fullWidth
                         size="small"
+                      />
+                    ) : field.key === "targetEfficiency" ? ( // ✅ Target Efficiency Editable Input
+                      <Box display="flex" alignItems="center">
+                        <TextField
+                          value={line[field.key]}
+                          onChange={(e) =>
+                            handleLineChange(idx, field.key, e.target.value)
+                          }
+                          placeholder={field.label}
+                          fullWidth
+                          size="small"
+                        />
+                        <Typography sx={{ marginLeft: 1 }}>%</Typography>
+                      </Box>
+                    ) : field.key === "target" ? ( // ✅ Target Field Readonly Input
+                      <input
+                        type="text"
+                        value={line[field.key]}
+                        readOnly
+                        style={{
+                          width: "100%",
+                          border: "none",
+                          background: "transparent",
+                        }}
+                        onChange={(e) =>
+                          handleLineChange(idx, "target", e.target.value)
+                        } // ✅ Ensure change is tracked
                       />
                     ) : (
                       line[field.key]

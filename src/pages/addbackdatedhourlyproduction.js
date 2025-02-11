@@ -17,7 +17,8 @@ const BackdatedHourlyProductionPage = () => {
       helper: "",
       shiftTime: 480,
       target100: "",
-      target75: "",
+      targetEfficiency: "85", // ✅ Default value set
+      target: "",
       targetPerHour: "",
       isLineSaved: false,
       hourlyData: Array.from({ length: 8 }, () => ({
@@ -44,7 +45,7 @@ const BackdatedHourlyProductionPage = () => {
         helper: "",
         shiftTime: 480,
         target100: "",
-        target75: "",
+        target: "",
         targetPerHour: "",
         isLineSaved: false,
         hourlyData: Array.from({ length: 8 }, () => ({
@@ -70,19 +71,21 @@ const BackdatedHourlyProductionPage = () => {
       const SAM = parseFloat(updatedLines[index].SAM) || 0;
       const operator = parseInt(updatedLines[index].operator) || 0;
       const helper = parseInt(updatedLines[index].helper) || 0;
+      const targetEfficiency =
+        parseFloat(updatedLines[index].targetEfficiency) || 85;
 
       if (SAM > 0) {
         const shiftTime = 480; // 8 hours shift
         const target100 = (shiftTime * (operator + helper)) / SAM;
-        const target75 = target100 * 0.75;
-        const targetPerHour = target75 / 8;
+        const target = (target100 * targetEfficiency) / 100;
+        const targetPerHour = target / 8;
 
         updatedLines[index].target100 = target100.toFixed(2);
-        updatedLines[index].target75 = target75.toFixed(2);
+        updatedLines[index].target = Math.round(target.toFixed(2)); // 👈 Target update
         updatedLines[index].targetPerHour = targetPerHour.toFixed(2);
       } else {
         updatedLines[index].target100 = "";
-        updatedLines[index].target75 = "";
+        updatedLines[index].target = "";
         updatedLines[index].targetPerHour = "";
       }
     }

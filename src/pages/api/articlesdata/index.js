@@ -37,6 +37,19 @@ export default async function handler(req, res) {
         });
       }
 
+      // Total Rate Calculation
+
+      const totalRate =
+        cuttingRate +
+        stitchingRate +
+        bartackAndButtonRate +
+        finishingRate +
+        packingRate;
+
+      // Total Rate with Overhead Calculation
+
+      const totalRateWithOverHead = totalRate * overhead;
+
       // Create a new article document
       const newArticle = new ArticlesData({
         articleName,
@@ -49,7 +62,9 @@ export default async function handler(req, res) {
           finishingRate,
           packingRate,
         },
+        totalRate, // ✅ Explicitly adding totalRate
         overhead,
+        totalRateWithOverHead, // ✅ Explicitly adding totalRateWithOverHead
       });
 
       // Save the document

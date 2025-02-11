@@ -65,12 +65,36 @@ const LineDetailsComponent = ({
               <TableCell key={index}>{line.target100 || "0"}</TableCell>
             ))}
           </TableRow>
+
+          {/* Target Efficiency Field */}
           <TableRow>
-            <TableCell>Target 75%</TableCell>
+            <TableCell>Target Efficiency %</TableCell>
             {productionData.lines.map((line, index) => (
-              <TableCell key={index}>{line.target75 || "0"}</TableCell>
+              <TableCell key={index}>
+                <TextField
+                  value={line.targetEfficiency || "0"}
+                  onChange={(e) =>
+                    handleLineDetailsChange(
+                      index,
+                      "targetEfficiency",
+                      e.target.value
+                    )
+                  }
+                  placeholder="Target Efficiency %"
+                  fullWidth
+                />
+              </TableCell>
             ))}
           </TableRow>
+          <TableRow>
+            <TableCell>
+              Target {productionData.lines[0]?.targetEfficiency || "0"}%
+            </TableCell>
+            {productionData.lines.map((line, index) => (
+              <TableCell key={index}>{line.target || "0"}</TableCell>
+            ))}
+          </TableRow>
+
           <TableRow>
             <TableCell>Target/Hour</TableCell>
             {productionData.lines.map((line, index) => (

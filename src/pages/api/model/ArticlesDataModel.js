@@ -15,6 +15,7 @@ const ArticlesDataSchema = new mongoose.Schema({
   rates: { type: RatesSchema, required: true },
   totalRate: { type: Number },
   overhead: { type: Number, required: true },
+  totalRateWithOverHead: { type: Number, required: true },
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -26,6 +27,10 @@ ArticlesDataSchema.pre("save", function (next) {
     this.rates.bartackAndButtonRate +
     this.rates.finishingRate +
     this.rates.packingRate;
+
+  // Calculate totalRateWithOverhead
+  this.totalRateWithOverHead = this.totalRate * this.overhead;
+
   next();
 });
 

@@ -15,7 +15,9 @@ const HourlyProductionPage = () => {
       helper: "",
       shiftTime: 480,
       target100: "",
-      target75: "",
+      targetEfficiency: "", // Added this
+      target: "",
+      targetLabel: "Target", // 👈 Label update hoga
       targetPerHour: "",
       isLineSaved: false,
       hourlyData: Array.from({ length: 8 }, () => ({
@@ -29,27 +31,35 @@ const HourlyProductionPage = () => {
     const updatedLines = [...lines];
     updatedLines[index][field] = value;
 
-    if (["SAM", "operator", "helper"].includes(field)) {
+    if (["SAM", "operator", "helper", "targetEfficiency"].includes(field)) {
       const SAM = parseFloat(updatedLines[index].SAM) || 0;
       const operator = parseInt(updatedLines[index].operator) || 0;
       const helper = parseInt(updatedLines[index].helper) || 0;
+      const targetEfficiency =
+        parseFloat(updatedLines[index].targetEfficiency) || 85;
 
-      if (SAM > 0) {
+      if (SAM > 0 && operator + helper > 0) {
         const target100 = (480 * (operator + helper)) / SAM;
-        const target75 = target100 * 0.75;
-        const targetPerHour = target75 / 8;
+        const target = (target100 * targetEfficiency) / 100;
+        const targetPerHour = target / 8;
 
         updatedLines[index].target100 = target100.toFixed(2);
-        updatedLines[index].target75 = target75.toFixed(2);
+        updatedLines[index].target = Math.round(target.toFixed(2)); // 👈 Target update
         updatedLines[index].targetPerHour = targetPerHour.toFixed(2);
       } else {
         updatedLines[index].target100 = "";
-        updatedLines[index].target75 = "";
+        updatedLines[index].target = "";
         updatedLines[index].targetPerHour = "";
+        updatedLines[index].targetLabel = "Target";
       }
     }
 
+    if (field === "targetEfficiency") {
+      updatedLines[index].targetLabel = "Target";
+    }
+
     setLines(updatedLines);
+    console.log("Updated Line Data:", updatedLines[index]); // ✅ Debugging
   };
 
   const handleHourlyChange = (lineIndex, hourIndex, value) => {
@@ -91,9 +101,13 @@ const HourlyProductionPage = () => {
       date: new Date().toISOString().split("T")[0],
       lines: linesToSave.map((line) => ({
         ...line,
+        targetEfficiency: line.targetEfficiency, // 👈 Include targetEfficiency
         hourlyData: [],
       })),
     };
+
+    console.log("Payload being sent:", JSON.stringify(payload, null, 2));
+
     try {
       const response = await fetch("/api/hourlyproduction", {
         method: "POST",

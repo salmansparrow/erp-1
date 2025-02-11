@@ -88,6 +88,81 @@ const HourlyProductionDisplay = () => {
           <Typography variant="h6" gutterBottom>
             {`Date: ${selectedProduction.date}`}
           </Typography>
+
+          {/* Added section for new 3 cells */}
+          <Table sx={{ border: "2px solid black", marginBottom: 3 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  sx={{ border: "1px solid black", fontWeight: "bold" }}
+                >
+                  Production / Target
+                </TableCell>
+                <TableCell
+                  sx={{ border: "1px solid black", fontWeight: "bold" }}
+                >
+                  Day Target @
+                </TableCell>
+                <TableCell
+                  sx={{ border: "1px solid black", fontWeight: "bold" }}
+                >
+                  Achieved Efficiency
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell
+                  sx={{ border: "1px solid black", textAlign: "center" }}
+                >
+                  {selectedProduction.lines.reduce(
+                    (sum, line) => sum + (line.totalPieces || 0),
+                    0
+                  )}
+                </TableCell>
+                <TableCell
+                  sx={{ border: "1px solid black", textAlign: "center" }}
+                >
+                  {selectedProduction.lines.reduce(
+                    (sum, line) => sum + (line.target || 0),
+                    0
+                  )}
+                </TableCell>
+                <TableCell
+                  sx={{ border: "1px solid black", textAlign: "center" }}
+                >
+                  {(() => {
+                    // MongoDB se pehle se stored EM aur AM le rahe hain
+                    const totalEM = selectedProduction.lines.reduce(
+                      (sum, line) =>
+                        sum +
+                        line.hourlyData.reduce(
+                          (hourSum, hour) => hourSum + (hour.em || 0),
+                          0
+                        ),
+                      0
+                    );
+
+                    const totalAM = selectedProduction.lines.reduce(
+                      (sum, line) =>
+                        sum +
+                        line.hourlyData.reduce(
+                          (hourSum, hour) => hourSum + (hour.am || 0),
+                          0
+                        ),
+                      0
+                    );
+
+                    const achievedEfficiency =
+                      totalAM > 0 ? (totalEM / totalAM) * 100 : 0;
+
+                    return `${achievedEfficiency.toFixed(2)}%`;
+                  })()}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+
           <Table sx={{ border: "2px solid black", borderCollapse: "collapse" }}>
             <TableHead>
               <TableRow>
@@ -109,40 +184,16 @@ const HourlyProductionDisplay = () => {
               {tableHeaders.map((field, fieldIdx) => (
                 <TableRow key={fieldIdx}>
                   <TableCell sx={{ border: "1px solid black" }}>
-                    {field.label}
+                    {field.label} {/* Display the label directly */}
                   </TableCell>
                   {selectedProduction.lines.map((line, lineIdx) => {
                     let value = line[field.key] || 0;
 
-                    // Shift Minutes Calculation
-                    if (field.key === "shiftMinutes") {
-                      value = (line.operator + line.helper) * line.shiftTime;
-                    }
-
-                    // Total Available Minutes = Shift Minutes + OT Minutes
-                    else if (field.key === "totalAvailableMinutes") {
-                      const shiftMinutes =
-                        (line.operator + line.helper) * line.shiftTime;
-                      const otMinutes = line.otData?.otMinutes || 0;
-                      value = shiftMinutes + otMinutes;
-                    }
-
-                    // Earned Minutes = SAM * (Total Pieces + OT Pieces)
-                    else if (field.key === "earnedMinutes") {
-                      const { totalPieces } = calculateTotals(line.hourlyData);
-                      const otPieces = line.otData?.otPieces || 0;
-                      value = line.SAM * (totalPieces + otPieces);
-                    }
-
-                    // OT Data Handling
-                    else if (field.key === "otPieces") {
-                      value = line.otData?.otPieces || 0;
-                    } else if (field.key === "otHours") {
-                      value = line.otData?.otHours || 0;
-                    } else if (field.key === "otMenPower") {
-                      value = line.otData?.otMenPower || 0;
-                    } else if (field.key === "otMinutes") {
-                      value = line.otData?.otMinutes || 0;
+                    // Handle targetEfficiency and target separately
+                    if (field.key === "targetEfficiency") {
+                      value = line.targetEfficiency || "85%"; // Default to 75% if not set
+                    } else if (field.key === "target") {
+                      value = line.target || 0; // Use target value
                     }
 
                     return (
@@ -151,9 +202,7 @@ const HourlyProductionDisplay = () => {
                         colSpan={2}
                         sx={{ border: "1px solid black", textAlign: "center" }}
                       >
-                        {field.key === "earnedMinutes"
-                          ? value.toFixed(2) // Earned Minutes ko 2 decimal places mein show karein
-                          : value}
+                        {value}
                       </TableCell>
                     );
                   })}

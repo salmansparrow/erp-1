@@ -152,7 +152,8 @@ const BackdatedLineDataForm = ({
                 { label: "Helper", key: "helper" },
                 { label: "Shift Time", key: "shiftTime" },
                 { label: "Target 100%", key: "target100" },
-                { label: "Target 75%", key: "target75" },
+                { label: "Efficiency %", key: "targetEfficiency" }, // Efficiency %
+                { label: "Target", key: "target" }, // New Target Field
                 { label: "Target/Hour", key: "targetPerHour" },
               ].map((field) => (
                 <TableRow key={field.key}>
@@ -165,6 +166,7 @@ const BackdatedLineDataForm = ({
                         "SAM",
                         "operator",
                         "helper",
+                        "targetEfficiency", // Now editable
                       ].includes(field.key) ? (
                         <TextField
                           value={line[field.key]}

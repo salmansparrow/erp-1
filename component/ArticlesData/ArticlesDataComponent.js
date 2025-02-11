@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Grid2,
+  InputAdornment,
   Paper,
   TextField,
   Typography,
@@ -21,8 +22,31 @@ function ArticlesDataComponent() {
       finishingRate: "",
       packingRate: "",
     },
-    overhead: "",
+    overhead: "14", //Default overhead value 14%
   });
+
+  // Function to calculate total rate
+  const calculateTotalRate = () => {
+    const {
+      cuttingRate,
+      stitchingRate,
+      bartackAndButtonRate,
+      finishingRate,
+      packingRate,
+    } = formData.rates;
+    return (
+      Number(cuttingRate) +
+      Number(stitchingRate) +
+      Number(bartackAndButtonRate) +
+      Number(finishingRate) +
+      Number(packingRate)
+    );
+  };
+
+  // Function to calculate totalRateWithOverhead
+  const totalRate = calculateTotalRate();
+  const totalRateWithOverhead =
+    totalRate * (1 + Number(formData.overhead) / 100);
 
   // Handle input changes
   const handleChange = (field, value, isRate = false) => {
@@ -35,6 +59,7 @@ function ArticlesDataComponent() {
       setFormData((prev) => ({ ...prev, [field]: value }));
     }
   };
+
   // Handle form submission
   const handlesubmit = async (e) => {
     e.preventDefault();
@@ -60,7 +85,7 @@ function ArticlesDataComponent() {
             finishingRate: "",
             packingRate: "",
           },
-          overhead: "",
+          overhead: "14", // Reset with default value
         });
       } else {
         const errorData = await response.json();
@@ -123,42 +148,42 @@ function ArticlesDataComponent() {
               onChange={(e) => handleChange("requiredManPower", e.target.value)}
             />
           </Box>
-          <Box sx={{ marginTop: 3, marginBottom: 3 }}>
-            <Typography variant="h6" gutterBottom textAlign="center">
-              Rates
-            </Typography>
-            <Grid2 container spacing={3} marginTop={3}>
-              {[
-                { field: "cuttingRate", label: "Cutting Rate" },
-                { field: "stitchingRate", label: "Stitching Rate" },
-                {
-                  field: "bartackAndButtonRate",
-                  label: "Bartack & Button Rate",
-                },
-                { field: "finishingRate", label: "Finishing Rate" },
-                { field: "packingRate", label: "Packing Rate" },
-              ].map(({ field, label }) => (
-                <Grid2 item xs={12} sm={6} md={3} key={field}>
-                  <TextField
-                    label={label}
-                    type="number"
-                    variant="outlined"
-                    fullWidth
-                    value={formData.rates[field]}
-                    onChange={(e) => handleChange(field, e.target.value, true)}
-                    slotProps={{
-                      input: {
-                        startAdornment: (
-                          <Typography sx={{ marginRight: 1 }}>Rs.</Typography>
-                        ),
-                      },
-                    }}
-                  />
-                </Grid2>
-              ))}
+          <Grid2 container spacing={3} marginTop={3} alignItems="center">
+            {[
+              { field: "cuttingRate", label: "Cutting Rate" },
+              { field: "stitchingRate", label: "Stitching Rate" },
+              { field: "bartackAndButtonRate", label: "Bartack & Button Rate" },
+              { field: "finishingRate", label: "Finishing Rate" },
+              { field: "packingRate", label: "Packing Rate" },
+            ].map(({ field, label }) => (
+              <Grid2 item xs={12} sm={6} md={3} key={field}>
+                <TextField
+                  label={label}
+                  type="number"
+                  variant="outlined"
+                  fullWidth
+                  value={formData.rates[field]}
+                  onChange={(e) => handleChange(field, e.target.value, true)}
+                  InputProps={{
+                    startAdornment: (
+                      <Typography sx={{ marginRight: 1 }}>Rs.</Typography>
+                    ),
+                  }}
+                />
+              </Grid2>
+            ))}
+
+            {/* ✅ Packing Rate ke immediately right side pe Total Rate */}
+            <Grid2 item xs={12} sm={6} md={3}>
+              <Typography variant="h6" textAlign="center">
+                <strong>Total Rate:</strong> Rs.{" "}
+                {calculateTotalRate().toFixed(2)}
+              </Typography>
             </Grid2>
-          </Box>
+          </Grid2>
+
           <Box
+            display={"flex"}
             sx={{
               marginBottom: 3,
               marginTop: 3,
@@ -168,10 +193,20 @@ function ArticlesDataComponent() {
               label="Overhead"
               type="number"
               variant="outlined"
-              fullWidth
               value={formData.overhead}
               onChange={(e) => handleChange("overhead", e.target.value)}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">%</InputAdornment>
+                  ),
+                },
+              }}
             />
+            <Typography variant="h6" sx={{ marginLeft: 3 }}>
+              Total with Overhead :{" "}
+              <strong>{totalRateWithOverhead.toFixed(2)}</strong>
+            </Typography>
           </Box>
           <Button type="submit" variant="contained" color="primary" fullWidth>
             Save Article

@@ -10,16 +10,11 @@ export const generateHours = () => {
   return hours;
 };
 
-export const calculateTotals = (hourlyData = [], line = []) => {
+export const calculateTotals = (hourlyData = []) => {
   const totalPieces = hourlyData.reduce(
     (sum, hour) => sum + (hour?.pieces || 0),
     0
   );
-  const totalEfficiency = hourlyData.reduce(
-    (sum, hour) => sum + (hour?.efficiency || 0),
-    0
-  );
-
   return { totalPieces };
 };
 
@@ -43,9 +38,10 @@ export const tableHeaders = [
   { label: "Shift Time", key: "shiftTime" },
   { label: "Available Minutes", key: "availableMinutes" },
   { label: "Target 100%", key: "target100" },
-  { label: "Target 75%", key: "target75" },
+  { label: "Target Efficiency%", key: "targetEfficiency" },
+  { label: "Target", key: "target" }, // Changed from "target" to "target75"
   { label: "Target / Hour", key: "targetPerHour" },
-  { label: "O.T Pieces", key: "otPieces" }, // Add OT fields
+  { label: "O.T Pieces", key: "otPieces" },
   { label: "O.T Hours", key: "otHours" },
   { label: "O.T MenPower", key: "otMenPower" },
   { label: "O.T Minutes", key: "otMinutes" },

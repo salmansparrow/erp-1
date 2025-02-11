@@ -42,7 +42,7 @@ function AdminNavbar() {
   const navLinks = [
     { label: "Create User", path: "/admin/createuser" },
     { label: "Users", path: "/admin/createuser" },
-    { label: "Report", path: "/admin/createuser" },
+    { label: "Add Articles Data", path: "/admin/articlesdata" },
   ];
 
   return (

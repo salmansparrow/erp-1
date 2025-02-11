@@ -39,6 +39,7 @@ const UpdateHourlyProductionWithCalendar = () => {
       if (!response.ok) throw new Error("Failed to fetch production data.");
 
       const data = await response.json();
+
       const fetchedOtData =
         data[0]?.lines.map((line) => ({
           hours: line.otData?.otHours || "",
@@ -152,25 +153,28 @@ const UpdateHourlyProductionWithCalendar = () => {
     const line = updatedProduction.lines[lineIndex];
     line[field] = value;
 
-    // Recalculate targets and shift time
+    // Recalculate targets based on new formula
     const SAM = parseFloat(line.SAM) || 0;
     const operator = parseInt(line.operator) || 0;
     const helper = parseInt(line.helper) || 0;
+    const targetEfficiency = parseFloat(line.targetEfficiency) || 85; // Default efficiency 85%
+    const otMinutes = parseFloat(otData[lineIndex]?.minutes) || 0; // OT Minutes added
+    console.log("ot minutes", otMinutes);
 
-    if (SAM > 0) {
+    if (SAM > 0 && operator + helper > 0) {
       const shiftTime = 480; // Default shift time in minutes
-      const target100 = (shiftTime * (operator + helper)) / SAM;
-      const target75 = target100 * 0.75;
-      const targetPerHour = target75 / 8;
+      const target100 = (shiftTime * (operator + helper) + otMinutes) / SAM; // Updated formula
+      const target = (target100 * targetEfficiency) / 100; // 👈 Updated Target Formula
+      const targetPerHour = target / 8;
 
       line.shiftTime = shiftTime;
       line.target100 = target100.toFixed(2);
-      line.target75 = target75.toFixed(2);
+      line.target = Math.round(target.toFixed(2)); // 👈 Target update
       line.targetPerHour = targetPerHour.toFixed(2);
     } else {
       line.shiftTime = 0;
       line.target100 = "";
-      line.target75 = "";
+      line.target = "";
       line.targetPerHour = "";
     }
 
