@@ -30,6 +30,39 @@ export const calculateEarnedMinutes = (SAM, totalLinePieces, otPieces) => {
   return SAM * (totalLinePieces + otPieces);
 };
 
+// Calculate OT Efficiency
+export const calculateOTEfficiency = (otMinutes, totalAM) => {
+  return totalAM > 0 ? Math.round((otMinutes / totalAM) * 100) : 0;
+};
+
+// Calculate Grand Efficiency
+export const calculateGrandEfficiency = (
+  earnedMinutes,
+  totalAvailableMinutes
+) => {
+  return totalAvailableMinutes > 0
+    ? (earnedMinutes / totalAvailableMinutes) * 100
+    : 0;
+};
+
+export const calculateHourlyTotalPieces = (lines) => {
+  const hourlyTotals = {};
+
+  lines.forEach((line) => {
+    line.hourlyData.forEach((hour, index) => {
+      const hourKey = `hour_${index + 1}`; // hour_1, hour_2, hour_3...
+
+      if (!hourlyTotals[hourKey]) {
+        hourlyTotals[hourKey] = 0;
+      }
+
+      hourlyTotals[hourKey] += hour.pieces || 0; // Pieces ko total karna
+    });
+  });
+
+  return hourlyTotals;
+};
+
 export const tableHeaders = [
   { label: "Article", key: "articleName" },
   { label: "SAM", key: "SAM" },
@@ -45,6 +78,7 @@ export const tableHeaders = [
   { label: "O.T Hours", key: "otHours" },
   { label: "O.T MenPower", key: "otMenPower" },
   { label: "O.T Minutes", key: "otMinutes" },
+  { label: "OT Efficiency", key: "otEfficiency" }, // ✅ New Key Added
   { label: "Shift Minutes", key: "shiftMinutes" },
   { label: "Total Available Minutes", key: "totalAvailableMinutes" },
   { label: "Earned Minutes", key: "earnedMinutes" },

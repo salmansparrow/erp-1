@@ -178,6 +178,22 @@ const UpdateHourlyProductionWithCalendar = () => {
       line.targetPerHour = "";
     }
 
+    // **Recalculate Hourly Data Based on New SAM**
+
+    if (line.hourlyData && SAM > 0) {
+      line.hourlyData = line.hourlyData.map((hour) => {
+        const pieces = parseFloat(hour.pieces) || 0;
+        const efficiency =
+          operator + helper > 0
+            ? ((pieces * SAM) / ((operator + helper) * 60)) * 100
+            : 0;
+        return {
+          ...hour,
+          efficiency: efficiency.toFixed(2),
+        };
+      });
+    }
+
     setProductionData(updatedProduction);
   };
 

@@ -12,6 +12,8 @@ export default async function handler(req, res) {
   try {
     await dbConnect();
 
+    console.log("db connected", dbConnect);
+
     const { email, password } = req.body;
 
     if (!email || !password) {

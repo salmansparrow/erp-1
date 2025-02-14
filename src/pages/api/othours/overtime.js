@@ -26,27 +26,7 @@ export default async function handler(req, res) {
     const parsedOtMinutes = Number(otMinutes);
     const parsedOtPieces = Number(otPieces);
 
-    console.log("ammar", parsedOtPieces, parsedOtMenPower);
-
-    console.log("Parsed OT Pieces:", parsedOtPieces);
-
-    console.log("Request Payload:", req.body);
-    console.log("Update Query:", { date, "lines.lineNumber": lineNumber });
-    console.log("Update Data:", {
-      otHours: parsedOtHours,
-      otMenPower: parsedOtMenPower,
-      otMinutes: parsedOtMinutes,
-      otPieces: parsedOtPieces,
-    });
-
     try {
-      console.log("Update new :", {
-        otHours: parsedOtHours,
-        otMenPower: parsedOtMenPower,
-        otMinutes: parsedOtMinutes,
-        otPieces: parsedOtPieces,
-      });
-
       const result = await HourlyProduction.updateOne(
         {
           date, // Match the specific date document

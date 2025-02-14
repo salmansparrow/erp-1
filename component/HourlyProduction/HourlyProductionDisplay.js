@@ -13,17 +13,24 @@ import {
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import {
+  calculateEarnedMinutes,
+  calculateShiftMinutes,
+  calculateTotalAvailableMinutes,
   calculateTotals,
   generateHours,
   tableHeaders,
+  calculateOTEfficiency,
+  calculateGrandEfficiency,
+  calculateHourlyTotalPieces,
 } from "../../utils/utils";
 import { handleDownloadExcel } from "../../utils/ExcelUtils";
-import loginImage from "../../public/images/login.jpg";
 
 const HourlyProductionDisplay = () => {
   const [productions, setProductions] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedProduction, setSelectedProduction] = useState(null);
+
+  const hourlyTotals = calculateHourlyTotalPieces(selectedProduction.lines);
 
   useEffect(() => {
     const fetchProductionData = async () => {
@@ -133,7 +140,6 @@ const HourlyProductionDisplay = () => {
                   sx={{ border: "1px solid black", textAlign: "center" }}
                 >
                   {(() => {
-                    // MongoDB se pehle se stored EM aur AM le rahe hain
                     const totalEM = selectedProduction.lines.reduce(
                       (sum, line) =>
                         sum +
@@ -185,16 +191,96 @@ const HourlyProductionDisplay = () => {
               {tableHeaders.map((field, fieldIdx) => (
                 <TableRow key={fieldIdx}>
                   <TableCell sx={{ border: "1px solid black" }}>
-                    {field.label} {/* Display the label directly */}
+                    {field.label}
                   </TableCell>
                   {selectedProduction.lines.map((line, lineIdx) => {
                     let value = line[field.key] || 0;
+                    const hourlyDataemam = line.hourlyData || [];
 
-                    // Handle targetEfficiency and target separately
+                    // Sum EM values
+                    const totalEM = hourlyDataemam.reduce(
+                      (sum, hour) => sum + (hour.em || 0),
+                      0
+                    );
+
+                    // Sum AM values
+                    const totalAM = hourlyDataemam.reduce(
+                      (sum, hour) => sum + (hour.am || 0),
+                      0
+                    );
+
+                    // Fetch OT Data
+                    const otMinutes = line.otData?.otMinutes || 0;
+
+                    // ✅ OT Efficiency Calculation
+                    if (field.key === "otEfficiency") {
+                      value = calculateOTEfficiency(otMinutes, totalAM);
+                    }
+
+                    // Handle specific fields
                     if (field.key === "targetEfficiency") {
-                      value = line.targetEfficiency || "85%"; // Default to 75% if not set
+                      value = `${line.targetEfficiency || 85}%`;
                     } else if (field.key === "target") {
-                      value = line.target || 0; // Use target value
+                      value = line.target || 0;
+                    }
+
+                    if (field.key === "otPieces") {
+                      value = line.otData?.otPieces || 0;
+                    }
+                    if (field.key === "otHours") {
+                      value = line.otData?.otHours || 0;
+                    }
+                    if (field.key === "otMenPower") {
+                      value = line.otData?.otMenPower || 0;
+                    }
+                    if (field.key === "otMinutes") {
+                      value = line.otData?.otMinutes || 0;
+                    }
+
+                    // Shift Minutes Calculation
+                    if (field.key === "shiftMinutes") {
+                      value = calculateShiftMinutes(
+                        line.shiftTime,
+                        line.operator,
+                        line.helper
+                      );
+                    }
+
+                    // Total Available Minutes Calculation
+                    if (field.key === "totalAvailableMinutes") {
+                      const shiftMinutes = calculateShiftMinutes(
+                        line.shiftTime,
+                        line.operator,
+                        line.helper
+                      );
+                      value = calculateTotalAvailableMinutes(
+                        shiftMinutes,
+                        line.otData?.otMinutes || 0
+                      );
+                    }
+
+                    // Target 100% Calculation (with Math.round)
+                    if (field.key === "target100") {
+                      value = Math.round(line.target100 || 0);
+                    }
+
+                    // Target / Hour Calculation (with Math.round)
+                    if (field.key === "targetPerHour") {
+                      value = Math.round(line.targetPerHour || 0);
+                    }
+
+                    // Earned Minutes Calculation (with Math.round)
+                    if (field.key === "earnedMinutes") {
+                      const totalLinePieces = calculateTotals(
+                        line.hourlyData
+                      ).totalPieces;
+                      value = Math.round(
+                        calculateEarnedMinutes(
+                          line.SAM,
+                          totalLinePieces,
+                          line.otData?.otPieces || 0
+                        )
+                      );
                     }
 
                     return (
@@ -235,7 +321,7 @@ const HourlyProductionDisplay = () => {
                             textAlign: "center",
                           }}
                         >
-                          {hourlyData.efficiency || 0}%
+                          {Math.round(hourlyData.efficiency || 0)}%
                         </TableCell>
                       </React.Fragment>
                     );
@@ -358,10 +444,10 @@ const HourlyProductionDisplay = () => {
                   const earnedMinutes = SAM * (totalPieces + otPieces);
 
                   // Ensure totalAvailableMinutes is not zero
-                  const grandEfficiency =
-                    totalAvailableMinutes > 0
-                      ? (earnedMinutes / totalAvailableMinutes) * 100
-                      : 0;
+                  const grandEfficiency = calculateGrandEfficiency(
+                    earnedMinutes,
+                    totalAvailableMinutes
+                  );
 
                   return (
                     <React.Fragment key={lineIdx}>

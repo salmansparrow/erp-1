@@ -10,6 +10,8 @@ function AdminFooter() {
         textAlign: "center",
         mt: "auto",
         boxShadow: "0 -1px 5px rgba(0,0,0,0.1)",
+        position: "relative",
+        bottom: 50,
       }}
     >
       <Typography variant="body2" color="textSecondary">
