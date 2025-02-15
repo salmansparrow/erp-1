@@ -30,7 +30,9 @@ const HourlyProductionDisplay = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedProduction, setSelectedProduction] = useState(null);
 
-  const hourlyTotals = calculateHourlyTotalPieces(selectedProduction.lines);
+  // const hourlyTotals = selectedProduction
+  //   ? calculateHourlyTotalPieces(selectedProduction.lines)
+  //   : [];
 
   useEffect(() => {
     const fetchProductionData = async () => {
