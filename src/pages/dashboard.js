@@ -4,9 +4,6 @@ import { Box, Typography } from "@mui/material";
 const DashboardPage = () => {
   return (
     <Box sx={{ display: "flex" }}>
-      {/* Sidebar */}
-      <Sidebar />
-
       {/* Main Content */}
       <Box
         sx={{
