@@ -5,66 +5,74 @@ export default async function handler(req, res) {
   await dbConnect();
 
   if (req.method === "POST") {
-    const {
-      articleName,
-      SAM,
-      requiredManPower,
-      rates: {
-        cuttingRate,
-        stitchingRate,
-        bartackAndButtonRate,
-        finishingRate,
-        packingRate,
-      },
-      overhead,
-    } = req.body;
-
     try {
-      // Validate the payload
+      // Debugging ke liye request body print karo
+      console.log("Received Data:", req.body);
+
+      const {
+        modelNumber,
+        articleName,
+        SAM,
+        requiredManPower,
+        rates,
+        overhead,
+      } = req.body;
+
+      // Ensure all numeric values are converted to numbers
+      const numericRates = {
+        cuttingRate: Number(rates.cuttingRate),
+        smallPartsRate: Number(rates.smallPartsRate),
+        stitchingRate: Number(rates.stitchingRate),
+        bartackAndButtonRate: Number(rates.bartackAndButtonRate),
+        outsideCropping: Number(rates.outsideCropping),
+        insideCropping: Number(rates.insideCropping),
+        dusting: Number(rates.dusting),
+        additionalJobFolding: Number(rates.additionalJobFolding),
+        pressPacking: Number(rates.pressPacking),
+        tapeSilingAttach: Number(rates.tapeSilingAttach),
+      };
+
+      const numericSAM = Number(SAM);
+      const numericRequiredManPower = Number(requiredManPower);
+      const numericOverhead = Number(overhead);
+
+      // Validate required fields
       if (
+        !modelNumber ||
         !articleName ||
-        !SAM ||
-        !requiredManPower ||
-        !cuttingRate ||
-        !stitchingRate ||
-        !bartackAndButtonRate ||
-        !finishingRate ||
-        !packingRate ||
-        !overhead
+        isNaN(numericSAM) ||
+        isNaN(numericRequiredManPower) ||
+        Object.values(numericRates).some(isNaN) ||
+        isNaN(numericOverhead)
       ) {
         return res.status(400).json({
-          message: "All fields are required.",
+          message: "All fields are required and must be valid numbers.",
         });
       }
 
       // Total Rate Calculation
-
-      const totalRate =
-        cuttingRate +
-        stitchingRate +
-        bartackAndButtonRate +
-        finishingRate +
-        packingRate;
+      const totalRate = Object.values(numericRates).reduce(
+        (sum, rate) => sum + rate,
+        0
+      );
 
       // Total Rate with Overhead Calculation
+      const totalRateWithOverHead = totalRate * (1 + numericOverhead / 100);
 
-      const totalRateWithOverHead = totalRate * overhead;
+      // Define cutToPackCost (if needed, update logic accordingly)
+      const cutToPackCost = totalRateWithOverHead;
 
       // Create a new article document
       const newArticle = new ArticlesData({
+        modelNumber,
         articleName,
-        SAM,
-        requiredManPower,
-        rates: {
-          cuttingRate,
-          stitchingRate,
-          bartackAndButtonRate,
-          finishingRate,
-          packingRate,
-        },
-        totalRate, // ✅ Explicitly adding totalRate
-        overhead,
-        totalRateWithOverHead, // ✅ Explicitly adding totalRateWithOverHead
+        SAM: numericSAM,
+        requiredManPower: numericRequiredManPower,
+        rates: numericRates,
+        overhead: numericOverhead,
+        totalRate,
+        totalRateWithOverHead,
+        cutToPackCost,
       });
 
       // Save the document
@@ -74,16 +82,17 @@ export default async function handler(req, res) {
         .status(201)
         .json({ message: "Article saved successfully!", newArticle });
     } catch (error) {
+      console.error("Error saving article:", error.message);
+
       if (error.code === 11000) {
-        // Handle duplicate key error
         return res.status(400).json({
           message: `Article with the name "${articleName}" already exists. Please choose a different name.`,
         });
       }
-      console.error("Error saving article:", error);
+
       return res
         .status(500)
-        .json({ message: "Failed to save article.", error });
+        .json({ message: "Failed to save article.", error: error.message });
     }
   } else {
     res.setHeader("Allow", ["POST"]);

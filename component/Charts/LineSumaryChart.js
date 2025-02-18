@@ -15,7 +15,6 @@ import {
   Box,
   Typography,
   Button,
-  Grid,
   Card,
   CardContent,
   TextField,
@@ -38,10 +37,18 @@ const EnhancedLineChart = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [chartData, setChartData] = useState(null);
+  const [availableLines, setAvailableLines] = useState([]); // For dynamically fetched lines
   const [error, setError] = useState(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Updated color palette with 3 colors
+  const colorPalette = [
+    "rgba(0, 123, 255, 0.5)", // Blue
+    "rgba(255, 0, 0, 0.5)", // Red
+    "rgba(255, 165, 0, 0.5)", // Orange
+  ];
 
   const fetchLineData = async () => {
     if (!startDate || !endDate) {
@@ -62,31 +69,32 @@ const EnhancedLineChart = () => {
 
       const data = await response.json();
 
-      // Prepare chart data
+      // Fetch available lines (could be a part of the response or another API call)
+      const linesFromAPI = data[0]?.lines || []; // Assuming the first entry has line data
+      setAvailableLines(linesFromAPI); // Set the dynamic line data
+
+      // Dynamically generate labels and datasets
       const labels = data.map((entry) => entry.date); // Dates as labels
-      const datasets = [
-        {
-          label: "Line 1 Efficiency",
-          data: data.map((entry) => entry.lines[0]?.averageEfficiency || 0),
-          borderColor: "blue",
-          backgroundColor: "rgba(0, 0, 255, 0.1)",
-          fill: true,
-        },
-        {
-          label: "Line 2 Efficiency",
-          data: data.map((entry) => entry.lines[1]?.averageEfficiency || 0),
-          borderColor: "green",
-          backgroundColor: "rgba(0, 255, 0, 0.1)",
-          fill: true,
-        },
-        {
-          label: "Line 3 Efficiency",
-          data: data.map((entry) => entry.lines[2]?.averageEfficiency || 0),
-          borderColor: "red",
-          backgroundColor: "rgba(255, 0, 0, 0.1)",
-          fill: true,
-        },
-      ];
+
+      // **Earned aur Available Minutes ka sum calculate karo**
+
+      // Dynamically generate datasets for each available line
+      const datasets = linesFromAPI.map((line, index) => {
+        const lineData = data.map((entry) => {
+          const lineEfficiency = entry.lines.find(
+            (entryLine) => entryLine.lineNumber === line.lineNumber
+          );
+          return lineEfficiency ? lineEfficiency.averageEfficiency : 0;
+        });
+
+        return {
+          label: `${line.name || `Line ${line.lineNumber}`} Efficiency`, // Use dynamic line name
+          data: lineData,
+          borderColor: colorPalette[index % colorPalette.length], // Cycle through color palette
+          backgroundColor: colorPalette[index % colorPalette.length], // Apply same color for background
+          fill: false,
+        };
+      });
 
       setChartData({ labels, datasets });
       setError(null);

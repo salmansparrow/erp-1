@@ -18,7 +18,6 @@ import { useRouter } from "next/router";
 
 function AdminNavbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
-
   const router = useRouter();
 
   const toggleDrawer = (open) => () => {
@@ -41,8 +40,9 @@ function AdminNavbar() {
 
   const navLinks = [
     { label: "Create User", path: "/admin/createuser" },
-    { label: "Users", path: "/admin/createuser" },
+    { label: "Users", path: "/admin/manage-user" },
     { label: "Add Articles Data", path: "/admin/articlesdata" },
+    { label: "View Articles Data", path: "/admin/articlesdata/allarticles" },
   ];
 
   return (

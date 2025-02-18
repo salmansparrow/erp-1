@@ -81,12 +81,18 @@ function FloorSummaryChart() {
       return null;
     }
 
+    // Total production sum
+    const totalProductionSum = summaryData.reduce(
+      (sum, entry) => sum + entry.totalProduction,
+      0
+    );
+
     return {
       labels: summaryData.map((entry) => entry.date), // Dates as labels
       datasets: [
         {
           type: "bar",
-          label: "Total Production",
+          label: `Total Production`, // Total sum hata diya
           data: summaryData.map((entry) => entry.totalProduction),
           backgroundColor: "rgba(54, 162, 235, 0.6)",
           borderColor: "rgba(54, 162, 235, 1)",
@@ -104,6 +110,55 @@ function FloorSummaryChart() {
         },
       ],
     };
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      tooltip: {
+        callbacks: {
+          title: function (tooltipItems) {
+            // Title me sirf date show kare
+            return `Date: ${tooltipItems[0].label}`;
+          },
+          label: function (context) {
+            // Agar bar chart hai, toh sirf us din ki production show kare
+            if (context.dataset.type === "bar") {
+              return `Production: ${context.raw}`;
+            }
+            // Line chart ka data unchanged rahe
+            return `${context.dataset.label}: ${context.raw}`;
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        type: "linear",
+        display: true,
+        position: "left",
+        title: {
+          display: true,
+          text: "Total Production (Pieces)",
+        },
+      },
+      y1: {
+        type: "linear",
+        display: true,
+        position: "right",
+        title: {
+          display: true,
+          text: "Efficiency (%)",
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+      },
+    },
   };
 
   return (
@@ -195,52 +250,61 @@ function FloorSummaryChart() {
             backgroundColor: "white",
             boxShadow: 2,
             borderRadius: 2,
-            width: "100%",
-            maxWidth: "900px",
-            marginTop: 4,
-            padding: 3,
-            backgroundColor: "white",
-            boxShadow: 2,
-            borderRadius: 2,
-            height: isMobile ? "400px" : "600px", // Adjust height based on screen size
           }}
         >
-          <Chart
-            type="bar"
-            data={createComboChartData()}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  position: "top",
-                },
-              },
-              scales: {
-                y: {
-                  type: "linear",
-                  display: true,
-                  position: "left",
-                  title: {
-                    display: true,
-                    text: "Total Production (Pieces)",
-                  },
-                },
-                y1: {
-                  type: "linear",
-                  display: true,
-                  position: "right",
-                  title: {
-                    display: true,
-                    text: "Efficiency (%)",
-                  },
-                  grid: {
-                    drawOnChartArea: false,
-                  },
-                },
-              },
+          {/* Total Production Label */}
+          <Typography
+            variant="h6"
+            sx={{
+              textAlign: "center",
+              marginBottom: 2,
+              fontWeight: "bold",
+              color: "green",
             }}
-          />
+          >
+            Total Production:{" "}
+            {summaryData.reduce((sum, entry) => sum + entry.totalProduction, 0)}
+          </Typography>
+
+          {/* Chart */}
+          <Box sx={{ height: isMobile ? "400px" : "600px" }}>
+            <Chart
+              type="bar"
+              data={createComboChartData()}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    position: "top",
+                  },
+                },
+                scales: {
+                  y: {
+                    type: "linear",
+                    display: true,
+                    position: "left",
+                    title: {
+                      display: true,
+                      text: "Total Production (Pieces)",
+                    },
+                  },
+                  y1: {
+                    type: "linear",
+                    display: true,
+                    position: "right",
+                    title: {
+                      display: true,
+                      text: "Efficiency (%)",
+                    },
+                    grid: {
+                      drawOnChartArea: false,
+                    },
+                  },
+                },
+              }}
+            />
+          </Box>
         </Box>
       )}
     </Box>

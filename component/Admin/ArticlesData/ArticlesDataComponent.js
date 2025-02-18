@@ -12,15 +12,21 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 function ArticlesDataComponent() {
   const [formData, setFormData] = useState({
+    modelNumber: "",
     articleName: "",
     SAM: "",
     requiredManPower: "",
     rates: {
       cuttingRate: "",
+      smallPartsRate: "",
       stitchingRate: "",
       bartackAndButtonRate: "",
-      finishingRate: "",
-      packingRate: "",
+      outsideCropping: "",
+      insideCropping: "",
+      dusting: "",
+      additionalJobFolding: "",
+      pressPacking: "",
+      tapeSilingAttach: "",
     },
     overhead: "14", //Default overhead value 14%
   });
@@ -29,26 +35,36 @@ function ArticlesDataComponent() {
   const calculateTotalRate = () => {
     const {
       cuttingRate,
+      smallPartsRate,
       stitchingRate,
       bartackAndButtonRate,
-      finishingRate,
-      packingRate,
+      outsideCropping,
+      insideCropping,
+      dusting,
+      additionalJobFolding,
+      pressPacking,
+      tapeSilingAttach,
     } = formData.rates;
     return (
       Number(cuttingRate) +
+      Number(smallPartsRate) +
       Number(stitchingRate) +
       Number(bartackAndButtonRate) +
-      Number(finishingRate) +
-      Number(packingRate)
+      Number(outsideCropping) +
+      Number(insideCropping) +
+      Number(dusting) +
+      Number(additionalJobFolding) +
+      Number(pressPacking) +
+      Number(tapeSilingAttach)
     );
   };
 
-  // Function to calculate totalRateWithOverhead
+  // ✅ CUT TO PACK COST
+
   const totalRate = calculateTotalRate();
   const totalRateWithOverhead =
     totalRate * (1 + Number(formData.overhead) / 100);
 
-  // Handle input changes
   const handleChange = (field, value, isRate = false) => {
     if (isRate) {
       setFormData((prev) => ({
@@ -75,15 +91,21 @@ function ArticlesDataComponent() {
           autoClose: 3000,
         });
         setFormData({
+          modelNumber: "",
           articleName: "",
           SAM: "",
           requiredManPower: "",
           rates: {
             cuttingRate: "",
+            smallPartsRate: "",
             stitchingRate: "",
             bartackAndButtonRate: "",
-            finishingRate: "",
-            packingRate: "",
+            outsideCropping: "",
+            insideCropping: "",
+            dusting: "",
+            additionalJobFolding: "",
+            pressPacking: "",
+            tapeSilingAttach: "",
           },
           overhead: "14", // Reset with default value
         });
@@ -108,10 +130,8 @@ function ArticlesDataComponent() {
         elevation={3}
         sx={{
           padding: 4,
-          margin: "20px auto",
+          margin: "30px auto",
           maxWidth: 800,
-          position: "relative",
-          top: 80,
         }}
       >
         <ToastContainer />
@@ -119,6 +139,15 @@ function ArticlesDataComponent() {
           Add New Article
         </Typography>
         <form onSubmit={handlesubmit}>
+          <Box sx={{ marginBottom: 3 }}>
+            <TextField
+              label="Model Number"
+              variant="outlined"
+              fullWidth
+              value={formData.modelNumber}
+              onChange={(e) => handleChange("modelNumber", e.target.value)}
+            />
+          </Box>
           <Box sx={{ marginBottom: 3 }}>
             <TextField
               label="Article Name"
@@ -151,10 +180,18 @@ function ArticlesDataComponent() {
           <Grid2 container spacing={3} marginTop={3} alignItems="center">
             {[
               { field: "cuttingRate", label: "Cutting Rate" },
+              { field: "smallPartsRate", label: "Small Parts Rate" },
               { field: "stitchingRate", label: "Stitching Rate" },
               { field: "bartackAndButtonRate", label: "Bartack & Button Rate" },
-              { field: "finishingRate", label: "Finishing Rate" },
-              { field: "packingRate", label: "Packing Rate" },
+              { field: "outsideCropping", label: "Outside Cropping" },
+              { field: "insideCropping", label: "Inside Cropping" },
+              { field: "dusting", label: "Dusting" },
+              {
+                field: "additionalJobFolding",
+                label: "Additional Job + Folding",
+              },
+              { field: "pressPacking", label: "Press & Packing" },
+              { field: "tapeSilingAttach", label: "Tape Siling/Attach" },
             ].map(({ field, label }) => (
               <Grid2 item xs={12} sm={6} md={3} key={field}>
                 <TextField
@@ -164,7 +201,7 @@ function ArticlesDataComponent() {
                   fullWidth
                   value={formData.rates[field]}
                   onChange={(e) => handleChange(field, e.target.value, true)}
-                  InputProps={{
+                  inputProps={{
                     startAdornment: (
                       <Typography sx={{ marginRight: 1 }}>Rs.</Typography>
                     ),
