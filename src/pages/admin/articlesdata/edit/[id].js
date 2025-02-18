@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import { Box, Typography, TextField, Button } from "@mui/material";
 import AdminLayout from "../../../../../component/Admin/AdminLayout";
@@ -101,6 +101,29 @@ function EditArticle() {
     setArticle(newArticle);
   };
 
+  // Memoize the total rate calculation
+  const totalRate = useMemo(() => {
+    if (!article) return 0;
+    return (
+      (article.cuttingRate || 0) +
+      (article.smallPartsRate || 0) +
+      (article.stitchingRate || 0) +
+      (article.bartackAndButtonRate || 0) +
+      (article.outsideCropping || 0) +
+      (article.insideCropping || 0) +
+      (article.dusting || 0) +
+      (article.additionalJobFolding || 0) +
+      (article.pressPacking || 0) +
+      (article.tapeSilingAttach || 0)
+    );
+  }, [article]);
+
+  // Memoize the total rate with overhead calculation
+  const totalRateWithOverHead = useMemo(() => {
+    if (!article) return 0;
+    return totalRate + (totalRate * (article.overhead || 0)) / 100;
+  }, [totalRate, article]);
+
   const handleSave = async () => {
     try {
       const response = await fetch(`/api/articlesdata/${id}`, {
@@ -150,7 +173,8 @@ function EditArticle() {
               label="SAM"
               variant="outlined"
               fullWidth
-              value={article.SAM}
+              type="number"
+              value={article.SAM || ""}
               sx={{ mb: 2 }}
               onChange={(e) => handleInputChange("SAM", e.target.value)}
             />
@@ -158,7 +182,8 @@ function EditArticle() {
               label="Manpower"
               variant="outlined"
               fullWidth
-              value={article.requiredManPower}
+              type="number"
+              value={article.requiredManPower || ""}
               sx={{ mb: 2 }}
               onChange={(e) =>
                 handleInputChange("requiredManPower", e.target.value)
@@ -170,6 +195,7 @@ function EditArticle() {
               label="Cutting Rate"
               variant="outlined"
               fullWidth
+              type="number"
               value={article.cuttingRate || ""}
               sx={{ mb: 2 }}
               onChange={(e) => handleInputChange("cuttingRate", e.target.value)}
@@ -178,7 +204,8 @@ function EditArticle() {
               label="Small Parts Rate"
               variant="outlined"
               fullWidth
-              value={article.smallPartsRate}
+              type="number"
+              value={article.smallPartsRate || ""}
               sx={{ mb: 2 }}
               onChange={(e) =>
                 handleInputChange("smallPartsRate", e.target.value)
@@ -188,7 +215,8 @@ function EditArticle() {
               label="Stitching Rate"
               variant="outlined"
               fullWidth
-              value={article.stitchingRate}
+              type="number"
+              value={article.stitchingRate || ""}
               sx={{ mb: 2 }}
               onChange={(e) =>
                 handleInputChange("stitchingRate", e.target.value)
@@ -198,7 +226,8 @@ function EditArticle() {
               label="Bartack & Button Rate"
               variant="outlined"
               fullWidth
-              value={article.bartackAndButtonRate}
+              type="number"
+              value={article.bartackAndButtonRate || ""}
               sx={{ mb: 2 }}
               onChange={(e) =>
                 handleInputChange("bartackAndButtonRate", e.target.value)
@@ -208,7 +237,8 @@ function EditArticle() {
               label="Outside Cropping"
               variant="outlined"
               fullWidth
-              value={article.outsideCropping}
+              type="number"
+              value={article.outsideCropping || ""}
               sx={{ mb: 2 }}
               onChange={(e) =>
                 handleInputChange("outsideCropping", e.target.value)
@@ -218,7 +248,8 @@ function EditArticle() {
               label="Inside Cropping"
               variant="outlined"
               fullWidth
-              value={article.insideCropping}
+              type="number"
+              value={article.insideCropping || ""}
               sx={{ mb: 2 }}
               onChange={(e) =>
                 handleInputChange("insideCropping", e.target.value)
@@ -228,7 +259,8 @@ function EditArticle() {
               label="Dusting"
               variant="outlined"
               fullWidth
-              value={article.dusting}
+              type="number"
+              value={article.dusting || ""}
               sx={{ mb: 2 }}
               onChange={(e) => handleInputChange("dusting", e.target.value)}
             />
@@ -236,7 +268,8 @@ function EditArticle() {
               label="Additional Job Folding"
               variant="outlined"
               fullWidth
-              value={article.additionalJobFolding}
+              type="number"
+              value={article.additionalJobFolding || ""}
               sx={{ mb: 2 }}
               onChange={(e) =>
                 handleInputChange("additionalJobFolding", e.target.value)
@@ -246,29 +279,33 @@ function EditArticle() {
               label="Press Packing"
               variant="outlined"
               fullWidth
-              value={article.pressPacking}
+              type="number"
+              value={article.pressPacking || ""}
               sx={{ mb: 2 }}
               onChange={(e) =>
                 handleInputChange("pressPacking", e.target.value)
               }
             />
-            <TextField
-              label="Tape Siling Attach"
-              variant="outlined"
-              fullWidth
-              value={article.tapeSilingAttach}
-              sx={{ mb: 2 }}
-              onChange={(e) =>
-                handleInputChange("tapeSilingAttach", e.target.value)
-              }
-            />
+            <Box>
+              <TextField
+                label="Tape Siling Attach"
+                variant="outlined"
+                fullWidth
+                type="number"
+                value={article.tapeSilingAttach || ""}
+                sx={{ mb: 2 }}
+                onChange={(e) =>
+                  handleInputChange("tapeSilingAttach", e.target.value)
+                }
+              />
+            </Box>
 
             {/* Total Rate (Calculated Automatically) */}
             <TextField
               label="Total Rate"
               variant="outlined"
               fullWidth
-              value={article.totalRate.toFixed(2)}
+              value={totalRate.toFixed(2)}
               sx={{ mb: 2 }}
               disabled
             />
@@ -276,7 +313,8 @@ function EditArticle() {
               label="Overhead %"
               variant="outlined"
               fullWidth
-              value={article.overhead}
+              type="number"
+              value={article.overhead || ""}
               sx={{ mb: 2 }}
               onChange={(e) => handleInputChange("overhead", e.target.value)}
             />
@@ -284,7 +322,7 @@ function EditArticle() {
               label="Total w/ Overhead"
               variant="outlined"
               fullWidth
-              value={article.totalRateWithOverHead}
+              value={totalRateWithOverHead.toFixed(2)}
               sx={{ mb: 2 }}
               disabled
             />

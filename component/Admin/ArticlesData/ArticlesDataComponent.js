@@ -7,9 +7,10 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 function ArticlesDataComponent() {
   const [formData, setFormData] = useState({
     modelNumber: "",
@@ -28,7 +29,7 @@ function ArticlesDataComponent() {
       pressPacking: "",
       tapeSilingAttach: "",
     },
-    overhead: "14", //Default overhead value 14%
+    overhead: "14", // Default overhead value 14%
   });
 
   // Function to calculate total rate
@@ -59,11 +60,14 @@ function ArticlesDataComponent() {
     );
   };
 
-  // ✅ CUT TO PACK COST
+  // Memoize the total rate calculation
+  const totalRate = useMemo(calculateTotalRate, [formData.rates]);
 
-  const totalRate = calculateTotalRate();
-  const totalRateWithOverhead =
-    totalRate * (1 + Number(formData.overhead) / 100);
+  // Memoize the total rate with overhead calculation
+  const totalRateWithOverhead = useMemo(
+    () => totalRate * (1 + Number(formData.overhead) / 100),
+    [totalRate, formData.overhead]
+  );
 
   const handleChange = (field, value, isRate = false) => {
     if (isRate) {
@@ -213,8 +217,7 @@ function ArticlesDataComponent() {
             {/* ✅ Packing Rate ke immediately right side pe Total Rate */}
             <Grid2 item xs={12} sm={6} md={3}>
               <Typography variant="h6" textAlign="center">
-                <strong>Total Rate:</strong> Rs.{" "}
-                {calculateTotalRate().toFixed(2)}
+                <strong>Total Rate:</strong> Rs. {totalRate.toFixed(2)}
               </Typography>
             </Grid2>
           </Grid2>
