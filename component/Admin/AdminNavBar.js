@@ -11,6 +11,8 @@ import {
   Box,
   Divider,
   Button,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import Link from "next/link";
@@ -18,6 +20,7 @@ import { useRouter } from "next/router";
 
 function AdminNavbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null); // State for dropdown
   const router = useRouter();
 
   const toggleDrawer = (open) => () => {
@@ -25,13 +28,8 @@ function AdminNavbar() {
   };
 
   const handleLogout = async () => {
-    // ✅  storage se token aur role remove karein
-
     document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-
-    // localStorage.removeItem("token");
-    // localStorage.removeItem("role");
 
     await fetch("/api/LoginSystem/Logout", { method: "GET" });
 
@@ -41,9 +39,20 @@ function AdminNavbar() {
   const navLinks = [
     { label: "Create User", path: "/admin/createuser" },
     { label: "Users", path: "/admin/manage-user" },
+  ];
+
+  const dropdown = [
     { label: "Add Articles Data", path: "/admin/articlesdata" },
     { label: "View Articles Data", path: "/admin/articlesdata/allarticles" },
   ];
+
+  const handleDropdownClick = (event) => {
+    setAnchorEl(event.currentTarget); // Set dropdown anchor element
+  };
+
+  const handleDropdownClose = () => {
+    setAnchorEl(null); // Close dropdown
+  };
 
   return (
     <AppBar position="static" sx={{ backgroundColor: "#3f51b5" }}>
@@ -60,7 +69,13 @@ function AdminNavbar() {
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Admin Panel
         </Typography>
-        <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3 }}>
+        <Box
+          sx={{
+            display: { xs: "none", md: "flex" },
+            gap: 3,
+            alignItems: "center",
+          }}
+        >
           {navLinks.map((link) => (
             <Link
               key={link.label}
@@ -83,6 +98,36 @@ function AdminNavbar() {
               </Typography>
             </Link>
           ))}
+          {/* Dropdown for Articles Data */}
+          <Button
+            onClick={handleDropdownClick}
+            sx={{
+              color: "white",
+              textTransform: "none",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            Articles Data
+          </Button>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleDropdownClose}
+          >
+            {dropdown.map((item) => (
+              <Link
+                key={item.label}
+                href={item.path}
+                passHref
+                style={{
+                  textDecoration: "none",
+                }}
+              >
+                <MenuItem onClick={handleDropdownClose}>{item.label}</MenuItem>
+              </Link>
+            ))}
+          </Menu>
         </Box>
 
         <Button
@@ -147,6 +192,30 @@ function AdminNavbar() {
                 </ListItem>
               </Link>
             ))}
+            {/* Dropdown for Articles Data in Drawer */}
+            <ListItem button onClick={handleDropdownClick}>
+              <ListItemText primary="Articles Data" />
+            </ListItem>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleDropdownClose}
+            >
+              {dropdown.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.path}
+                  passHref
+                  style={{
+                    textDecoration: "none",
+                  }}
+                >
+                  <MenuItem onClick={handleDropdownClose}>
+                    {item.label}
+                  </MenuItem>
+                </Link>
+              ))}
+            </Menu>
           </List>
           <Button
             variant="contained"

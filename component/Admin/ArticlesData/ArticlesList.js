@@ -152,7 +152,9 @@ function ArticlesList() {
                           display: "flex",
                           gap: 2,
                           flexWrap: "wrap",
-                          flexDirection: "column",
+                          flexDirection: { xs: "column", sm: "row" }, // Responsive flex direction
+                          justifyContent: "center", // Center buttons horizontally
+                          alignItems: "center", // Center buttons vertically
                         }}
                       >
                         <Button

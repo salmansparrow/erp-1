@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { Box, Typography, TextField, Button } from "@mui/material";
+import AdminLayout from "../../../../../component/Admin/AdminLayout";
 
 function EditArticle() {
   const router = useRouter();
@@ -39,7 +40,7 @@ function EditArticle() {
   const handleInputChange = (field, value) => {
     const newArticle = { ...article };
 
-    // Agar field numeric hai to parseFloat karein, warna direct string set karein
+    // Parse numeric fields
     if (
       [
         "cuttingRate",
@@ -61,10 +62,10 @@ function EditArticle() {
     ) {
       newArticle[field] = parseFloat(value) || 0;
     } else {
-      newArticle[field] = value; // Strings ko directly assign karein
+      newArticle[field] = value;
     }
 
-    // Recalculate rates only if a numeric field is updated
+    // Recalculate rates if any relevant field is updated
     if (
       [
         "cuttingRate",
@@ -77,6 +78,7 @@ function EditArticle() {
         "additionalJobFolding",
         "pressPacking",
         "tapeSilingAttach",
+        "overhead",
       ].includes(field)
     ) {
       newArticle.totalRate =
@@ -110,7 +112,7 @@ function EditArticle() {
       if (!response.ok) throw new Error("Failed to update article.");
 
       alert("Article updated successfully!");
-      router.push("/articles");
+      router.push("/admin/articlesdata"); // Redirect to the articles list page
     } catch (error) {
       console.error("Error updating article:", error);
       alert("Error updating article.");
@@ -120,174 +122,180 @@ function EditArticle() {
   if (loading) return <Typography>Loading...</Typography>;
 
   return (
-    <Box sx={{ padding: 2 }}>
-      <Typography variant="h4" gutterBottom>
-        Edit Article
-      </Typography>
+    <AdminLayout>
+      <Box sx={{ padding: 2 }}>
+        <Typography variant="h4" gutterBottom>
+          Edit Article
+        </Typography>
 
-      {article && (
-        <>
-          <TextField
-            label="Model Number"
-            variant="outlined"
-            fullWidth
-            value={article.modelNumber}
-            sx={{ mb: 2 }}
-            disabled
-          />
-          <TextField
-            label="Article Name"
-            variant="outlined"
-            fullWidth
-            value={article.articleName}
-            sx={{ mb: 2 }}
-            onChange={(e) => handleInputChange("articleName", e.target.value)}
-          />
-          <TextField
-            label="SAM"
-            variant="outlined"
-            fullWidth
-            value={article.SAM}
-            sx={{ mb: 2 }}
-            onChange={(e) => handleInputChange("SAM", e.target.value)}
-          />
-          <TextField
-            label="Manpower"
-            variant="outlined"
-            fullWidth
-            value={article.requiredManPower}
-            sx={{ mb: 2 }}
-            onChange={(e) =>
-              handleInputChange("requiredManPower", e.target.value)
-            }
-          />
+        {article && (
+          <>
+            <TextField
+              label="Model Number"
+              variant="outlined"
+              fullWidth
+              value={article.modelNumber}
+              sx={{ mb: 2 }}
+              disabled
+            />
+            <TextField
+              label="Article Name"
+              variant="outlined"
+              fullWidth
+              value={article.articleName}
+              sx={{ mb: 2 }}
+              onChange={(e) => handleInputChange("articleName", e.target.value)}
+            />
+            <TextField
+              label="SAM"
+              variant="outlined"
+              fullWidth
+              value={article.SAM}
+              sx={{ mb: 2 }}
+              onChange={(e) => handleInputChange("SAM", e.target.value)}
+            />
+            <TextField
+              label="Manpower"
+              variant="outlined"
+              fullWidth
+              value={article.requiredManPower}
+              sx={{ mb: 2 }}
+              onChange={(e) =>
+                handleInputChange("requiredManPower", e.target.value)
+              }
+            />
 
-          {/* Rates Fields */}
-          <TextField
-            label="Cutting Rate"
-            variant="outlined"
-            fullWidth
-            value={article.cuttingRate || ""}
-            sx={{ mb: 2 }}
-            onChange={(e) => handleInputChange("cuttingRate", e.target.value)}
-          />
-          <TextField
-            label="Small Parts Rate"
-            variant="outlined"
-            fullWidth
-            value={article.smallPartsRate}
-            sx={{ mb: 2 }}
-            onChange={(e) =>
-              handleInputChange("smallPartsRate", e.target.value)
-            }
-          />
-          <TextField
-            label="Stitching Rate"
-            variant="outlined"
-            fullWidth
-            value={article.stitchingRate}
-            sx={{ mb: 2 }}
-            onChange={(e) => handleInputChange("stitchingRate", e.target.value)}
-          />
-          <TextField
-            label="Bartack & Button Rate"
-            variant="outlined"
-            fullWidth
-            value={article.bartackAndButtonRate}
-            sx={{ mb: 2 }}
-            onChange={(e) =>
-              handleInputChange("bartackAndButtonRate", e.target.value)
-            }
-          />
-          <TextField
-            label="Outside Cropping"
-            variant="outlined"
-            fullWidth
-            value={article.outsideCropping}
-            sx={{ mb: 2 }}
-            onChange={(e) =>
-              handleInputChange("outsideCropping", e.target.value)
-            }
-          />
-          <TextField
-            label="Inside Cropping"
-            variant="outlined"
-            fullWidth
-            value={article.insideCropping}
-            sx={{ mb: 2 }}
-            onChange={(e) =>
-              handleInputChange("insideCropping", e.target.value)
-            }
-          />
-          <TextField
-            label="Dusting"
-            variant="outlined"
-            fullWidth
-            value={article.dusting}
-            sx={{ mb: 2 }}
-            onChange={(e) => handleInputChange("dusting", e.target.value)}
-          />
-          <TextField
-            label="Additional Job Folding"
-            variant="outlined"
-            fullWidth
-            value={article.additionalJobFolding}
-            sx={{ mb: 2 }}
-            onChange={(e) =>
-              handleInputChange("additionalJobFolding", e.target.value)
-            }
-          />
-          <TextField
-            label="Press Packing"
-            variant="outlined"
-            fullWidth
-            value={article.pressPacking}
-            sx={{ mb: 2 }}
-            onChange={(e) => handleInputChange("pressPacking", e.target.value)}
-          />
-          <TextField
-            label="Tape Siling Attach"
-            variant="outlined"
-            fullWidth
-            value={article.tapeSilingAttach}
-            sx={{ mb: 2 }}
-            onChange={(e) =>
-              handleInputChange("tapeSilingAttach", e.target.value)
-            }
-          />
+            {/* Rates Fields */}
+            <TextField
+              label="Cutting Rate"
+              variant="outlined"
+              fullWidth
+              value={article.cuttingRate || ""}
+              sx={{ mb: 2 }}
+              onChange={(e) => handleInputChange("cuttingRate", e.target.value)}
+            />
+            <TextField
+              label="Small Parts Rate"
+              variant="outlined"
+              fullWidth
+              value={article.smallPartsRate}
+              sx={{ mb: 2 }}
+              onChange={(e) =>
+                handleInputChange("smallPartsRate", e.target.value)
+              }
+            />
+            <TextField
+              label="Stitching Rate"
+              variant="outlined"
+              fullWidth
+              value={article.stitchingRate}
+              sx={{ mb: 2 }}
+              onChange={(e) =>
+                handleInputChange("stitchingRate", e.target.value)
+              }
+            />
+            <TextField
+              label="Bartack & Button Rate"
+              variant="outlined"
+              fullWidth
+              value={article.bartackAndButtonRate}
+              sx={{ mb: 2 }}
+              onChange={(e) =>
+                handleInputChange("bartackAndButtonRate", e.target.value)
+              }
+            />
+            <TextField
+              label="Outside Cropping"
+              variant="outlined"
+              fullWidth
+              value={article.outsideCropping}
+              sx={{ mb: 2 }}
+              onChange={(e) =>
+                handleInputChange("outsideCropping", e.target.value)
+              }
+            />
+            <TextField
+              label="Inside Cropping"
+              variant="outlined"
+              fullWidth
+              value={article.insideCropping}
+              sx={{ mb: 2 }}
+              onChange={(e) =>
+                handleInputChange("insideCropping", e.target.value)
+              }
+            />
+            <TextField
+              label="Dusting"
+              variant="outlined"
+              fullWidth
+              value={article.dusting}
+              sx={{ mb: 2 }}
+              onChange={(e) => handleInputChange("dusting", e.target.value)}
+            />
+            <TextField
+              label="Additional Job Folding"
+              variant="outlined"
+              fullWidth
+              value={article.additionalJobFolding}
+              sx={{ mb: 2 }}
+              onChange={(e) =>
+                handleInputChange("additionalJobFolding", e.target.value)
+              }
+            />
+            <TextField
+              label="Press Packing"
+              variant="outlined"
+              fullWidth
+              value={article.pressPacking}
+              sx={{ mb: 2 }}
+              onChange={(e) =>
+                handleInputChange("pressPacking", e.target.value)
+              }
+            />
+            <TextField
+              label="Tape Siling Attach"
+              variant="outlined"
+              fullWidth
+              value={article.tapeSilingAttach}
+              sx={{ mb: 2 }}
+              onChange={(e) =>
+                handleInputChange("tapeSilingAttach", e.target.value)
+              }
+            />
 
-          {/* Total Rate (Calculated Automatically) */}
-          <TextField
-            label="Total Rate"
-            variant="outlined"
-            fullWidth
-            value={article.totalRate}
-            sx={{ mb: 2 }}
-            disabled
-          />
-          <TextField
-            label="Overhead %"
-            variant="outlined"
-            fullWidth
-            value={article.overhead}
-            sx={{ mb: 2 }}
-            onChange={(e) => handleInputChange("overhead", e.target.value)}
-          />
-          <TextField
-            label="Total w/ Overhead"
-            variant="outlined"
-            fullWidth
-            value={article.totalRateWithOverHead}
-            sx={{ mb: 2 }}
-            disabled
-          />
+            {/* Total Rate (Calculated Automatically) */}
+            <TextField
+              label="Total Rate"
+              variant="outlined"
+              fullWidth
+              value={article.totalRate.toFixed(2)}
+              sx={{ mb: 2 }}
+              disabled
+            />
+            <TextField
+              label="Overhead %"
+              variant="outlined"
+              fullWidth
+              value={article.overhead}
+              sx={{ mb: 2 }}
+              onChange={(e) => handleInputChange("overhead", e.target.value)}
+            />
+            <TextField
+              label="Total w/ Overhead"
+              variant="outlined"
+              fullWidth
+              value={article.totalRateWithOverHead}
+              sx={{ mb: 2 }}
+              disabled
+            />
 
-          <Button variant="contained" color="primary" onClick={handleSave}>
-            Save Changes
-          </Button>
-        </>
-      )}
-    </Box>
+            <Button variant="contained" color="primary" onClick={handleSave}>
+              Save Changes
+            </Button>
+          </>
+        )}
+      </Box>
+    </AdminLayout>
   );
 }
 

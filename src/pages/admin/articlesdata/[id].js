@@ -70,7 +70,7 @@ function ArticleDetails() {
               Manpower: {article.requiredManPower}
             </Typography>
             <Typography variant="body1">
-              Total Rate: {article.totalRate}
+              Total Rate: {article.totalRate.toFixed(2)}
             </Typography>
             <Typography variant="body1">
               Overhead %: {article.overhead}
@@ -112,7 +112,7 @@ function ArticleDetails() {
             </Grid>
             {/* Displaying Total Rate at the End */}
             <Typography variant="h6" sx={{ my: 2 }}>
-              Total Rate: {article.totalRate}
+              Total Rate: {article.totalRate.toFixed(2)}
             </Typography>
           </Box>
         </Paper>
