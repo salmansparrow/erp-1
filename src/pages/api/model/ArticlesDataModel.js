@@ -15,7 +15,7 @@ const RatesSchema = new mongoose.Schema({
 
 const ArticlesDataSchema = new mongoose.Schema({
   modelNumber: { type: String, required: true, unique: true },
-  articleName: { type: String, required: true, unique: true }, // Add `unique: true`
+  articleName: { type: String, required: true },
   SAM: { type: Number, required: true },
   requiredManPower: { type: Number, required: true },
   rates: { type: RatesSchema, required: true },

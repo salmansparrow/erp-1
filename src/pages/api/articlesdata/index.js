@@ -86,7 +86,7 @@ export default async function handler(req, res) {
 
       if (error.code === 11000) {
         return res.status(400).json({
-          message: `Article with the name "${articleName}" already exists. Please choose a different name.`,
+          message: `Model Number "${modelNumber}" already exists. Please choose a different model number.`,
         });
       }
 
