@@ -6,7 +6,6 @@ export default async function handler(req, res) {
 
   if (req.method === "POST") {
     try {
-      // Debugging ke liye request body print karo
       console.log("Received Data:", req.body);
 
       const {
@@ -18,7 +17,12 @@ export default async function handler(req, res) {
         overhead,
       } = req.body;
 
-      // Ensure all numeric values are converted to numbers
+      if (!modelNumber || !articleName || !rates) {
+        return res.status(400).json({
+          message: "Model number, article name, and rates are required.",
+        });
+      }
+
       const numericRates = {
         cuttingRate: Number(rates.cuttingRate),
         smallPartsRate: Number(rates.smallPartsRate),
@@ -36,33 +40,25 @@ export default async function handler(req, res) {
       const numericRequiredManPower = Number(requiredManPower);
       const numericOverhead = Number(overhead);
 
-      // Validate required fields
       if (
-        !modelNumber ||
-        !articleName ||
         isNaN(numericSAM) ||
         isNaN(numericRequiredManPower) ||
         Object.values(numericRates).some(isNaN) ||
         isNaN(numericOverhead)
       ) {
         return res.status(400).json({
-          message: "All fields are required and must be valid numbers.",
+          message: "All numeric fields must contain valid numbers.",
         });
       }
 
-      // Total Rate Calculation
       const totalRate = Object.values(numericRates).reduce(
         (sum, rate) => sum + rate,
         0
       );
 
-      // Total Rate with Overhead Calculation
       const totalRateWithOverHead = totalRate * (1 + numericOverhead / 100);
-
-      // Define cutToPackCost (if needed, update logic accordingly)
       const cutToPackCost = totalRateWithOverHead;
 
-      // Create a new article document
       const newArticle = new ArticlesData({
         modelNumber,
         articleName,
@@ -75,7 +71,6 @@ export default async function handler(req, res) {
         cutToPackCost,
       });
 
-      // Save the document
       await newArticle.save();
 
       return res
@@ -86,7 +81,7 @@ export default async function handler(req, res) {
 
       if (error.code === 11000) {
         return res.status(400).json({
-          message: `Model Number "${modelNumber}" already exists. Please choose a different model number.`,
+          message: `Duplicate entry: This model number already exists.`,
         });
       }
 
